@@ -1,10 +1,13 @@
 library(sdmTMB)
 library(dplyr)
 
+# UTM transfromation
+# maybe subsetting hauls to reflect range of species
+
 dat = readRDS("survey_data/joined_nwfsc_data.rds")
 
 df = expand.grid("species" = unique(dat$species),
-  spatial_only=c(TRUE,FALSE), 
+  spatial_only=c(FALSE), 
   depth_effect = c(TRUE,FALSE),
   time_varying = c(FALSE),
   covariate = c("o2","temp")
@@ -30,7 +33,7 @@ for(i in 1:nrow(df)) {
   spde <- make_spde(x = sub$longitude_dd, y = sub$latitude_dd, 
     n_knots = 150)
   
-  formula = paste0("cpue_kg_km2 ~ -1 + as.factor(year)")
+  formula = paste0("cpue_kg_km2 ~ -1")
   if(df$depth_effect[i]==TRUE) {
     formula = paste0(formula, " + depth + I(depth^2)")
   }
@@ -47,7 +50,8 @@ for(i in 1:nrow(df)) {
     time_varying = NULL
     time = NULL
   }
-
+  formula = paste0(formula, " + as.factor(year)")
+  
   # fit model
   m <- sdmTMB(
     formula = as.formula(formula),
