@@ -1,4 +1,4 @@
-# consonants sub projects
+# consonants outline projects
 
 1a. Environmental affinities across regions (EW, SA,]
 - regions are west coast, BC, GOA
