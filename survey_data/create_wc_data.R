@@ -21,21 +21,6 @@ catch$scientific_name = tolower(catch$scientific_name)
 catch = dplyr::left_join(catch, spec_names)
 catch$common_name = tolower(catch$common_name)
 
-# WC names in cope and haltuch 2012
-cope_haltuch = c("aurora rockfish", "big skate", "bigfin eelpout",
-  "black eelpout", "brown cat shark", "california slickhead",
-  "canary rockfish", "chilipepper", "darkblotched rockfish",
-  "deepsea sole", "dover sole", "english sole", "giant grenadier",
-  "greenstriped rockfish", "halfbanded rockfish", "lingcod", 
-  "longnose skate", "longspine thornyhead", "butterfish unident.",
-  "pacific flatnose", "pacific grenadier", "pacific hake",
-  "pacific sanddab", "petrale sole", "pink seaperch",
-  "rex sole", "sablefish", "sandpaper skate", "sharpchin rockfish",
-  "shortbelly rockfish", "shortspine thornyhead", "slender sole",
-  "pacific spiny dogfish", "splitnose rockfish", "spotted ratfish",
-  "stripetail rockfish", "white croaker", "yellowtail rockfish")
-
-catch = dplyr::filter(catch, common_name %in% cope_haltuch)
 
 haul = readRDS("survey_data/wcbts_haul_2019-08-01.rds")
 
@@ -51,6 +36,34 @@ haul = dplyr::rename(haul,
     performance,trawl_id)
 
 dat = dplyr::left_join(catch, haul)
+
+# WC names in cope and haltuch 2012
+cope_haltuch = c("aurora rockfish", "big skate", "bigfin eelpout",
+  "black eelpout", "brown cat shark", "california slickhead",
+  "canary rockfish", "chilipepper", "darkblotched rockfish",
+  "deepsea sole", "dover sole", "english sole", "giant grenadier",
+  "greenstriped rockfish", "halfbanded rockfish", "lingcod", 
+  "longnose skate", "longspine thornyhead", "butterfish unident.",
+  "pacific flatnose", "pacific grenadier", "pacific hake",
+  "pacific sanddab", "petrale sole", "pink seaperch",
+  "rex sole", "sablefish", "sandpaper skate", "sharpchin rockfish",
+  "shortbelly rockfish", "shortspine thornyhead", "slender sole",
+  "pacific spiny dogfish", "splitnose rockfish", "spotted ratfish",
+  "stripetail rockfish", "white croaker", "yellowtail rockfish")
+
+# filter by 'well sampled wc species'
+#dat = dplyr::filter(dat, common_name %in% cope_haltuch)
+
+# filter by species that occur in 10% of hauls
+threshold = 0.1
+keep = dat %>% 
+  mutate(occur = ifelse(cpue_kg_km2 > 0,1,0)) %>%
+  group_by(year, common_name) %>% 
+  summarize(p = sum(occur)/n()) %>% 
+  group_by(common_name) %>% 
+  summarize(mean_p = mean(p, na.rm=T)) %>% 
+  filter(mean_p >= threshold)
+dat = dplyr::filter(dat, common_name %in% keep$common_name)
 
 dat = dplyr::rename(dat, 
   temp=degc,depth=depthm,species=common_name) %>% 
