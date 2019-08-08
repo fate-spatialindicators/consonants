@@ -3,31 +3,25 @@ library(dplyr)
 
 dat = readRDS("survey_data/joined_nwfsc_data.rds")
 
-spp_ranked = dplyr::mutate(dat, 
-  bin = ifelse(cpue_kg_km2>0,1,0)) %>% 
-  group_by(common_name) %>% 
-  summarize(n = sum(bin)) %>% 
-  arrange(-n)
-
-df = expand.grid("common_name" = unique(spp_ranked$common_name),
-  spatial_only=c(TRUE), 
+df = expand.grid("species" = unique(dat$species),
+  spatial_only=c(TRUE,FALSE), 
   depth_effect = c(TRUE,FALSE),
-  time_varying = c(TRUE,FALSE),
-  covariate = c("o2","degc")
+  time_varying = c(FALSE),
+  covariate = c("o2","temp")
 )
 saveRDS(df, "output/wc/models.RDS")
 
 for(i in 1:nrow(df)) {
   
   sub = dplyr::filter(dat, 
-    common_name == df$common_name[i])
-  sub$depthm = scale(log(sub$depthm))
+    species == df$species[i])
+  sub$depth = scale(log(sub$depth))
   sub$o2 = scale(log(sub$o2))
-  sub$degc = scale(sub$degc)
+  sub$temp = scale(sub$temp)
 
   # drop points with missing values
   sub = dplyr::filter(sub, year%in%seq(2010,2015)) %>% 
-    dplyr::filter(!is.na(o2),!is.na(degc),!is.na(depthm))
+    dplyr::filter(!is.na(o2),!is.na(temp),!is.na(depth))
   
   # rename variables to make code generic
   sub = dplyr::rename(sub, enviro = as.character(df$covariate[i]))
@@ -38,24 +32,28 @@ for(i in 1:nrow(df)) {
   
   formula = paste0("cpue_kg_km2 ~ -1 + as.factor(year)")
   if(df$depth_effect[i]==TRUE) {
-    formula = paste0(formula, " + depthm + I(depthm^2)")
+    formula = paste0(formula, " + depth + I(depth^2)")
   }
   
   time_formula = "~ -1"
   if(df$time_varying[i]==TRUE) {
     time_formula = paste0(time_formula, " + ", 
       "enviro", " + I(","enviro","^2)")
+    time_varying = as.formula(time_formula)
+    time = "year"
   } else {
     formula = paste0(formula, " + ", 
       "enviro", " + I(","enviro","^2)")
+    time_varying = NULL
+    time = NULL
   }
-    
+
   # fit model
   m <- sdmTMB(
     formula = as.formula(formula),
-    time_varying = as.formula(time_formula),
+    time_varying = time_varying,
     spde = spde,
-    time = ifelse(df$time_varying[i]==TRUE, "year", NULL),
+    time = time,
     family = tweedie(link = "log"),
     data = sub,
     anisotropy = TRUE,
