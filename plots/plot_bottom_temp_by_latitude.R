@@ -15,5 +15,5 @@ group_by(f, year,level) %>%
   geom_ribbon(aes(ymin=low,ymax=hi),alpha=0.3) + 
   geom_line() + 
   ylab("Bottom temperature") + xlab("Year") + 
-  facet_wrap(~level)
+  facet_wrap(~level,nrow=1)
 dev.off()
