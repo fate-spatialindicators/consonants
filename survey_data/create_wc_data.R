@@ -55,5 +55,6 @@ dat = dplyr::left_join(catch, haul)
 dat = dplyr::rename(dat, 
   temp=degc,depth=depthm,species=common_name) %>% 
   select(-depth_m)
+dat$survey = "nwfsc.combo"
 
 saveRDS(dat, "survey_data/joined_nwfsc_data.rds")
