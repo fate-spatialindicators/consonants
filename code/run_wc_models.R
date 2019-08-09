@@ -90,7 +90,8 @@ for(i in 1:nrow(df)) {
     family = tweedie(link = "log"),
     data = sub,
     anisotropy = TRUE,
-    spatial_only = df$spatial_only[i]
+    spatial_only = df$spatial_only[i],
+    quadratic_roots = TRUE
   )
   
   saveRDS(m, file=paste0("output/wc/model_",i,".rds"))
