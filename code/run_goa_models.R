@@ -78,7 +78,7 @@ for(i in 1:nrow(df)) {
   formula = paste0(formula, " + as.factor(year)")
   
   # fit model
-  m <- sdmTMB(
+  m <- try(sdmTMB(
     formula = as.formula(formula),
     time_varying = time_varying,
     spde = spde,
@@ -88,8 +88,9 @@ for(i in 1:nrow(df)) {
     anisotropy = TRUE,
     spatial_only = df$spatial_only[i],
     quadratic_roots = TRUE
-  )
+  ), silent=TRUE)
   
-  saveRDS(m, file=paste0("output/goa/model_",i,".rds"))
+  if(class(m)!="try-error") saveRDS(m, 
+    file=paste0("output/goa/model_",i,".rds"))
   
 }
