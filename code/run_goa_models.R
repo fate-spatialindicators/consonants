@@ -9,6 +9,8 @@ dplyr::group_by(dat, species) %>%
     max = max(latitude_dd[which(cpue_kg_km2 > 0)])) %>% 
   as.data.frame() %>% arrange(min)
 
+dat = dplyr::filter(dat, species!="butterfly sculpin")
+
 # UTM transformation
 dat_ll = dat
 coordinates(dat_ll) <- c("longitude_dd", "latitude_dd")

@@ -5,8 +5,8 @@ library(sp)
 dat = readRDS("survey_data/joined_nwfsc_data.rds")
 
 dplyr::group_by(dat, species) %>% 
-  summarize(min = min(latitude[which(cpue_kg_km2 > 0)]),
-    max = max(latitude[which(cpue_kg_km2 > 0)])) %>% 
+  summarize(min = min(latitude_dd[which(cpue_kg_km2 > 0)]),
+    max = max(latitude_dd[which(cpue_kg_km2 > 0)])) %>% 
   as.data.frame() %>% arrange(min)
 
 # UTM transformation
@@ -82,7 +82,7 @@ for(i in 1:nrow(df)) {
   formula = paste0(formula, " + as.factor(year)")
   
   # fit model
-  m <- sdmTMB(
+  m <- try(sdmTMB(
     formula = as.formula(formula),
     time_varying = time_varying,
     spde = spde,
@@ -92,8 +92,8 @@ for(i in 1:nrow(df)) {
     anisotropy = TRUE,
     spatial_only = df$spatial_only[i],
     quadratic_roots = TRUE
-  )
+  ), silent=TRUE)
   
-  saveRDS(m, file=paste0("output/wc/model_",i,".rds"))
+  if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/model_",i,".rds"))
   
 }
