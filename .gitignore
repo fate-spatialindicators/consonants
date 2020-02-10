@@ -6,3 +6,4 @@
 *.rds
 .httr-oauth
 .httr-oauth-SUSPENDED
+.DS_Store
