@@ -23,6 +23,9 @@ for(i in 1:nrow(df)) {
 # remove junk columns
 df = dplyr::select(df, -spatial_only, -time_varying)
 
+# save results
+saveRDS(df,file=paste0("output/",region,"_output.rds"))
+
 pdf(paste0("plots/",region,"-temp_range.pdf"))
 level_order = dplyr::filter(df, !is.na(range), covariate=="temp",
   depth_effect == TRUE, range_se < 1) %>%

@@ -1,4 +1,6 @@
 library(sdmTMB)
+devtools::install_github("pbs-assess/sdmTMB",
+  ref="quadratic_range")
 library(dplyr)
 library(sp)
 
