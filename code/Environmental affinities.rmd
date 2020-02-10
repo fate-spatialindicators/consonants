@@ -2,7 +2,9 @@
 title: "Environmental affinities"
 author: "Jameal Samhouri"
 date: "8/6/2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 This script is for use with the FATE spatial indicators project led by Lewis Barnett and Eric Ward, August 2019. It generates plots of thermal and dissolved oygen affinities for groundfish based on sdmTMB model output.
@@ -15,7 +17,7 @@ We will consider affinity using at least 2 measures of environmental affinities:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "/Users/jameal.samhouri/Dropbox/Projects/In progress/Barnett et al. FATE/") # the root directory for all work in this .Rmd
+#knitr::opts_knit$set(root.dir = #"/Users/jameal.samhouri/Dropbox/Projects/In progress/Barnett et al. #FATE/") # the root directory for all work in this .Rmd
 ```
 
 ### Prep for running code

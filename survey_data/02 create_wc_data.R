@@ -51,6 +51,23 @@ cope_haltuch = c("aurora rockfish", "big skate", "bigfin eelpout",
   "pacific spiny dogfish", "splitnose rockfish", "spotted ratfish",
   "stripetail rockfish", "white croaker", "yellowtail rockfish")
 
+# these are additional species on the prioritization spreadsheet
+fram = c(cope_haltuch, "vermilion and sunset rockfish",
+  "black rockfish", "cowcod","copper rockfish",
+  "brown rockfish","quillback rockfish",
+  "redbanded rockfish","tree rockfish",
+  "squarespot rockfish","starry rockfish",
+  "speckled rockfish","rougheye and blackspotted rockfish",
+  "shortraker rockfish","flathead sole",
+  "widow rockfish","kelp greenling",
+  "olive rockfish","blue rockfish",
+  "kelp rockfish","cabezon",
+  "sand sole","flag rockfish",
+  "starry flounder","rock sole unident.",
+  "greenspotted rockfish",
+  "honeycomb rockfish",
+  "California scorpionfish",
+  "blackgill rockfish")
 # filter by 'well sampled wc species'
 #dat = dplyr::filter(dat, common_name %in% cope_haltuch)
 
@@ -65,7 +82,7 @@ keep = dat %>%
   filter(mean_p >= threshold)
 
 keep = c(keep$common_name, 
-  cope_haltuch[which(cope_haltuch %in% keep$common_name==FALSE)])
+  cope_haltuch[which(c(cope_haltuch,fram) %in% keep$common_name==FALSE)])
 
 # remove urchins, stars, etc
 spp_to_keep = c("urchin|star|anemone|cucumber|sea pen|salps|sponge|snail|shab|slug|jellyfish|squid|shrimp|hagfish|pasiphaeid|smelt|tongue|tritonia")
