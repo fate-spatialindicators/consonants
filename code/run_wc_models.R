@@ -24,7 +24,7 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
 
 df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
-  depth_effect = c(TRUE),
+  depth_effect = c(TRUE,FALSE),
   time_varying = c(FALSE),
   covariate = c("o2","temp")
 )
@@ -60,45 +60,50 @@ for(i in 1:nrow(df)) {
   sub = dplyr::rename(sub, enviro = as.character(df$covariate[i]))
   
   # make spde
-  spde <- make_spde(x = sub$longitude, y = sub$latitude, 
-    n_knots = 250)
+  spde <- try(make_spde(x = sub$longitude, y = sub$latitude, 
+    n_knots = 250), silent=TRUE)
+  if(class(spde) != "try-error") {
+    formula = paste0("cpue_kg_km2 ~ -1")
+    
+    time_formula = "~ -1"
+    if(df$time_varying[i]==TRUE) {
+      time_formula = paste0(time_formula, " + ", 
+        "enviro", " + I(","enviro","^2)")
+      time_varying = as.formula(time_formula)
+      time = "year"
+    } else {
+      formula = paste0(formula, " + ", 
+        "enviro", " + I(","enviro","^2)")
+      time_varying = NULL
+      time = NULL
+    }
+    formula = paste0(formula, " + as.factor(year)")
+    
+    if(df$depth_effect[i]==TRUE) {
+      formula = paste0(formula, " + depth + I(depth^2)")
+    }
+    
+    # fit model
+    m <- try(sdmTMB(
+      formula = as.formula(formula),
+      time_varying = time_varying,
+      spde = spde,
+      time = time,
+      family = tweedie(link = "log"),
+      data = sub,
+      anisotropy = TRUE,
+      spatial_only = df$spatial_only[i],
+      quadratic_roots = TRUE
+    ), silent=TRUE)
+    
+    #sd_report <- summary(m$sd_report)
+    #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
+    
+    if(class(m)!="try-error") {
+      saveRDS(m, file=paste0("output/wc/model_",i,".rds"))
+      #sd_report <- summary(m$sd_report)
+      #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
+    }
+  } # end try on spde
   
-  formula = paste0("cpue_kg_km2 ~ -1")
-  if(df$depth_effect[i]==TRUE) {
-    formula = paste0(formula, " + depth + I(depth^2)")
-  }
-  
-  time_formula = "~ -1"
-  if(df$time_varying[i]==TRUE) {
-    time_formula = paste0(time_formula, " + ", 
-      "enviro", " + I(","enviro","^2)")
-    time_varying = as.formula(time_formula)
-    time = "year"
-  } else {
-    formula = paste0(formula, " + ", 
-      "enviro", " + I(","enviro","^2)")
-    time_varying = NULL
-    time = NULL
-  }
-  formula = paste0(formula, " + as.factor(year)")
-  
-  # fit model
-  m <- try(sdmTMB(
-    formula = as.formula(formula),
-    time_varying = time_varying,
-    spde = spde,
-    time = time,
-    family = tweedie(link = "log"),
-    data = sub,
-    anisotropy = TRUE,
-    spatial_only = df$spatial_only[i],
-    quadratic_roots = TRUE
-  ), silent=TRUE)
-  
-  #sd_report <- summary(m$sd_report)
-  #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
-  
-  if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/model_",i,".rds"))
-  sd_report <- summary(m$sd_report)
-  params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
 }

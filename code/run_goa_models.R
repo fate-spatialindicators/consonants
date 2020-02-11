@@ -25,9 +25,9 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
 
 df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
-  depth_effect = c(TRUE),
   time_varying = c(FALSE),
-  covariate = c("temp")
+  covariate = c("temp"),
+  depth_effect = c(TRUE,FALSE)
 )
 df = dplyr::filter(df, species!="")
 
@@ -61,9 +61,6 @@ for(i in 1:nrow(df)) {
     n_knots = 250)
   
   formula = paste0("cpue_kg_km2 ~ -1")
-  if(df$depth_effect[i]==TRUE) {
-    formula = paste0(formula, " + depth + I(depth^2)")
-  }
   
   time_formula = "~ -1"
   if(df$time_varying[i]==TRUE) {
@@ -79,6 +76,9 @@ for(i in 1:nrow(df)) {
   }
   formula = paste0(formula, " + as.factor(year)")
   
+  if(df$depth_effect[i]==TRUE) {
+    formula = paste0(formula, " + depth + I(depth^2)")
+  }
   # fit model
   m <- try(sdmTMB(
     formula = as.formula(formula),
