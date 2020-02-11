@@ -73,6 +73,7 @@ fram = c(cope_haltuch, "vermilion and sunset rockfish",
 
 # filter by species that occur in 10% of hauls
 threshold = 0.1
+
 keep = dat %>% 
   mutate(occur = ifelse(cpue_kg_km2 > 0,1,0)) %>%
   group_by(year, common_name) %>% 
@@ -82,7 +83,7 @@ keep = dat %>%
   filter(mean_p >= threshold)
 
 keep = c(keep$common_name, 
-  cope_haltuch[which(c(cope_haltuch,fram) %in% keep$common_name==FALSE)])
+  fram[which(fram %in% keep$common_name==FALSE)])
 
 # remove urchins, stars, etc
 spp_to_keep = c("urchin|star|anemone|cucumber|sea pen|salps|sponge|snail|shab|slug|jellyfish|squid|shrimp|hagfish|pasiphaeid|smelt|tongue|tritonia")
