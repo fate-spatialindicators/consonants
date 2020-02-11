@@ -58,7 +58,7 @@ for(i in 1:nrow(df)) {
   
   # make spde
   spde <- make_spde(x = sub$longitude, y = sub$latitude, 
-    n_knots = 150)
+    n_knots = 250)
   
   formula = paste0("cpue_kg_km2 ~ -1")
   if(df$depth_effect[i]==TRUE) {
