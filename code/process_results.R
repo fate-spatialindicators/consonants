@@ -24,7 +24,7 @@ for(i in 1:nrow(df)) {
 df = dplyr::select(df, -spatial_only, -time_varying)
 
 # save results
-write.csv(df, file=paste0("output/",region,"_output.rds"))
+write.csv(df, file=paste0("output/",region,"_output.csv"))
 #saveRDS(df,file=paste0("output/",region,"_output.rds"))
 
 pdf(paste0("plots/",region,"-temp_range.pdf"))
