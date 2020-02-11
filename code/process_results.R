@@ -24,7 +24,8 @@ for(i in 1:nrow(df)) {
 df = dplyr::select(df, -spatial_only, -time_varying)
 
 # save results
-saveRDS(df,file=paste0("output/",region,"_output.rds"))
+write.csv(df, file=paste0("output/",region,"_output.rds"))
+#saveRDS(df,file=paste0("output/",region,"_output.rds"))
 
 pdf(paste0("plots/",region,"-temp_range.pdf"))
 level_order = dplyr::filter(df, !is.na(range), covariate=="temp",
