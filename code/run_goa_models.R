@@ -25,7 +25,7 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
 
 df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
-  depth_effect = c(TRUE,FALSE),
+  depth_effect = c(TRUE),
   time_varying = c(FALSE),
   covariate = c("temp")
 )

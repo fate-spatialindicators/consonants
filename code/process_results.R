@@ -1,7 +1,7 @@
 library(ggplot2)
 library(dplyr)
 
-region=c("goa","wc")[1]
+region=c("goa","wc")[2]
 df = readRDS(paste0("output/",region,"/models.RDS"))
 
 for(i in 1:nrow(df)) {

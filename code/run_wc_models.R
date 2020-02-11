@@ -24,7 +24,7 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
 
 df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
-  depth_effect = c(TRUE,FALSE),
+  depth_effect = c(TRUE),
   time_varying = c(FALSE),
   covariate = c("o2","temp")
 )
@@ -95,6 +95,10 @@ for(i in 1:nrow(df)) {
     quadratic_roots = TRUE
   ), silent=TRUE)
   
-  if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/model_",i,".rds"))
+  #sd_report <- summary(m$sd_report)
+  #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
   
+  if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/model_",i,".rds"))
+  sd_report <- summary(m$sd_report)
+  params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
 }
