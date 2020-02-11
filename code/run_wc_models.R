@@ -31,7 +31,7 @@ df = expand.grid("species" = unique(dat$species),
 )
 saveRDS(df, "output/wc/models.RDS")
 
-for(i in 1:nrow(df)) {
+for(i in 229:nrow(df)) {
   
   # filter by species, and select range within occurrences
   sub = dplyr::filter(dat, 
