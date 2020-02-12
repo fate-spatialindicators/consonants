@@ -21,7 +21,6 @@ catch$scientific_name = tolower(catch$scientific_name)
 catch = dplyr::left_join(catch, spec_names)
 catch$common_name = tolower(catch$common_name)
 
-
 haul = readRDS("survey_data/wcbts_haul_2019-08-01.rds")
 
 haul$year = as.numeric(substr(haul$date_yyyymmdd,1,4))

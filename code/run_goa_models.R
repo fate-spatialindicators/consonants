@@ -41,11 +41,12 @@ for(i in 1:nrow(df)) {
   
   # filter by species, and select range within occurrences
   sub = dplyr::filter(dat, 
-    species == df$species[i]) %>% 
-    dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
-      latitude <= max(latitude[which(cpue_kg_km2>0)]),
-      longitude > min(longitude[which(cpue_kg_km2>0)]),
-      longitude < max(longitude[which(cpue_kg_km2>0)]))
+    species == df$species[i])
+  #%>% 
+  #  dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
+  #    latitude <= max(latitude[which(cpue_kg_km2>0)]),
+  #    longitude > min(longitude[which(cpue_kg_km2>0)]),
+  #    longitude < max(longitude[which(cpue_kg_km2>0)]))
   
   sub = dplyr::filter(sub,depth>0)
   # rescale variables
@@ -76,7 +77,7 @@ for(i in 1:nrow(df)) {
     formula = paste0(formula, " + ", 
       "enviro", " + I(","enviro","^2)")
     time_varying = NULL
-    time = NULL
+    time = "year"
   }
   formula = paste0(formula, " + as.factor(year)")
   

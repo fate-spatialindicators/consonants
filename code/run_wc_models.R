@@ -22,6 +22,17 @@ dat = as.data.frame(dat_utm)
 dat = dplyr::rename(dat, longitude = longitude_dd, 
   latitude = latitude_dd)
 
+# do some summaries by species
+d = dplyr::group_by(dat, species, year) %>% 
+  summarize(p = length(which(cpue_kg_km2>0))/n(),
+    max_lat = max(latitude[which(cpue_kg_km2>0)],na.rm=T), 
+    min_lat = min(latitude[which(cpue_kg_km2>0)],na.rm=T),
+    max_lon = max(longitude[which(cpue_kg_km2>0)],na.rm=T),
+    min_lon = min(longitude[which(cpue_kg_km2>0)],na.rm=T)) %>%
+  group_by(species) %>% 
+  summarize(p = mean(p), max_lat = max(max_lat), min_lat = min(min_lat),
+    max_lon = max(max_lon), min_lon = min(min_lon))
+
 df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
   depth_effect = c(TRUE,FALSE),
@@ -75,7 +86,7 @@ for(i in 1:nrow(df)) {
       formula = paste0(formula, " + ", 
         "enviro", " + I(","enviro","^2)")
       time_varying = NULL
-      time = NULL
+      time = "year"
     }
     formula = paste0(formula, " + as.factor(year)")
     
