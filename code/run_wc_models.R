@@ -72,7 +72,7 @@ for(i in 1:nrow(df)) {
   
   # make spde
   spde <- try(make_spde(x = sub$longitude, y = sub$latitude, 
-    n_knots = 150), silent=TRUE)
+    n_knots = 250), silent=TRUE)
   if(class(spde) != "try-error") {
     formula = paste0("cpue_kg_km2 ~ -1")
     
