@@ -19,5 +19,8 @@ d = dplyr::filter(d,survey=="GOA")
 # filter out 0 depths
 d = dplyr::filter(d,depth>0)
 
+# filter out years < 1990 (gear changes) and 2001 (limited sampling)
+d = dplyr::filter(d, year%in%c(1984,1987,2001)==FALSE)
+
 saveRDS(d, "survey_data/joined_goa_data.rds")
 

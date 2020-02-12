@@ -1,3 +1,4 @@
+devtools::install_github("pbs-assess/sdmTMB")
 library(sdmTMB)
 library(dplyr)
 library(sp)
@@ -17,7 +18,7 @@ coordinates(dat_ll) <- c("longitude_dd", "latitude_dd")
 proj4string(dat_ll) <- CRS("+proj=longlat +datum=WGS84")
 # convert to utm with spTransform
 dat_utm = spTransform(dat_ll, 
-  CRS("+proj=utm +zone=11 +datum=WGS84 +units=km"))
+  CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 # convert back from sp object to data frame
 dat = as.data.frame(dat_utm)
 dat = dplyr::rename(dat, longitude = longitude_dd, 
@@ -33,7 +34,7 @@ df = dplyr::filter(df, species!="")
 
 saveRDS(df, "output/goa/models.RDS")
 
-for(i in 1:nrow(df)) {
+for(i in 56:nrow(df)) {
   
   # filter by species, and select range within occurrences
   sub = dplyr::filter(dat, 
@@ -58,7 +59,7 @@ for(i in 1:nrow(df)) {
   
   # make spde
   spde <- make_spde(x = sub$longitude, y = sub$latitude, 
-    n_knots = 250)
+    n_knots = 150)
   
   formula = paste0("cpue_kg_km2 ~ -1")
   
@@ -89,8 +90,13 @@ for(i in 1:nrow(df)) {
     data = sub,
     anisotropy = TRUE,
     spatial_only = df$spatial_only[i],
-    quadratic_roots = TRUE
+    quadratic_roots = TRUE,
+    control = sdmTMBcontrol(step.min = 0.01, step.max = 1)
   ), silent=TRUE)
+  
+  #sd_report <- summary(m$sd_report)
+  #params <- as.data.frame(sd_report[grep("quadratic", 
+  #  row.names(sd_report)), ])
   
   if(class(m)!="try-error") saveRDS(m, 
     file=paste0("output/goa/model_",i,".rds"))
