@@ -21,8 +21,11 @@ dat_utm = spTransform(dat_ll,
   CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 # convert back from sp object to data frame
 dat = as.data.frame(dat_utm)
+# convert to km
 dat = dplyr::rename(dat, longitude = longitude_dd, 
   latitude = latitude_dd)
+dat$latitude = dat$latitude /1000
+dat$longitude = dat$longitude /1000
 
 df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
