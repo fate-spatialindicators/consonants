@@ -50,16 +50,17 @@ df = expand.grid("species" = unique(dat$species),
 )
 saveRDS(df, "output/wc/models_ROMS.RDS")
 
+start.time <- Sys.time()
 for(i in 1:nrow(df)) {
   
   # filter by species, and select range within occurrences
   sub = dplyr::filter(dat, 
-                      species == df$species[i]) %>% 
-    dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
-                  latitude <= max(latitude[which(cpue_kg_km2>0)]),
-                  longitude > min(longitude[which(cpue_kg_km2>0)]),
-                  longitude < max(longitude[which(cpue_kg_km2>0)]))
-  
+                      species == df$species[i]) #%>% 
+    # dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
+    #               latitude <= max(latitude[which(cpue_kg_km2>0)]),
+    #               longitude > min(longitude[which(cpue_kg_km2>0)]),
+    #               longitude < max(longitude[which(cpue_kg_km2>0)]))
+    # 
   # rescale variables
   sub$depth = scale(log(sub$depth))
   sub$o2 = scale(log(sub$ROMS_oxygen_bottom_era5_monthly))
@@ -105,8 +106,9 @@ for(i in 1:nrow(df)) {
   formula = paste0(formula, " + as.factor(year)")
   
   # fit model
-  m <- try(sdmTMB(
+  m <- try( sdmTMB( 
     formula = as.formula(formula),
+    #formula = cpue_kg_km2 ~ as.factor(year) + depth,
     time_varying = time_varying,
     spde = spde,
     time = time,
@@ -115,11 +117,12 @@ for(i in 1:nrow(df)) {
     anisotropy = TRUE,
     spatial_only = df$spatial_only[i],
     quadratic_roots = TRUE
-  ), silent=TRUE)
+  ), 
+  silent=TRUE)
   
   if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/model_ROMS_",i,".rds"))
   
 }
-
+Sys.time() - start.time
 
 # started at 0632
