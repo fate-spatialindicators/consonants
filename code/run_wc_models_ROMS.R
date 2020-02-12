@@ -125,4 +125,4 @@ for(i in 1:nrow(df)) {
 }
 Sys.time() - start.time
 
-# started at 0632
+# Time difference of 2.901493 hours
