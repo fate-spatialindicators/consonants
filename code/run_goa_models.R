@@ -34,7 +34,7 @@ df = dplyr::filter(df, species!="")
 
 saveRDS(df, "output/goa/models.RDS")
 
-for(i in 56:nrow(df)) {
+for(i in 1:nrow(df)) {
   
   # filter by species, and select range within occurrences
   sub = dplyr::filter(dat, 
