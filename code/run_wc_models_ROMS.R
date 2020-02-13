@@ -84,7 +84,7 @@ for(i in 1:nrow(df)) {
   
   # make spde
   spde <- make_spde(x = sub$longitude, y = sub$latitude, 
-                    n_knots = 150)
+                    n_knots = 250)
   
   formula = paste0("cpue_kg_km2 ~ -1")
   if(df$depth_effect[i]==TRUE) {
@@ -101,7 +101,7 @@ for(i in 1:nrow(df)) {
     formula = paste0(formula, " + ", 
                      "enviro", " + I(","enviro","^2)")
     time_varying = NULL
-    time = NULL
+    time = "year"
   }
   formula = paste0(formula, " + as.factor(year)")
   
