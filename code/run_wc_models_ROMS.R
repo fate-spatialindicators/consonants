@@ -58,7 +58,7 @@ for(i in 1:nrow(df)) {
   
   # filter by species, and select range within occurrences
   sub = dplyr::filter(dat, 
-                      species == df$species[i]) #%>% 
+                      species == df$species[i]) %>% 
     dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
                   latitude <= max(latitude[which(cpue_kg_km2>0)]),
                   longitude > min(longitude[which(cpue_kg_km2>0)]),
