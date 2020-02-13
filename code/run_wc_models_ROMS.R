@@ -1,5 +1,8 @@
 # Dependencies: run Extracto-ROMS.R first
-
+devtools::install_github("pbs-assess/sdmTMB")
+library(sdmTMB)
+library(dplyr)
+library(sp)
 
 # get survey data
 
@@ -84,7 +87,7 @@ for(i in 1:nrow(df)) {
   
   # make spde
   spde <- make_spde(x = sub$longitude, y = sub$latitude, 
-                    n_knots = 250)
+                    n_knots = 250) # ew recommends 250 as a minimum, max of 350
   
   formula = paste0("cpue_kg_km2 ~ -1")
   if(df$depth_effect[i]==TRUE) {
