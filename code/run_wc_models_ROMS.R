@@ -59,11 +59,11 @@ for(i in 1:nrow(df)) {
   # filter by species, and select range within occurrences
   sub = dplyr::filter(dat, 
                       species == df$species[i]) #%>% 
-    # dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
-    #               latitude <= max(latitude[which(cpue_kg_km2>0)]),
-    #               longitude > min(longitude[which(cpue_kg_km2>0)]),
-    #               longitude < max(longitude[which(cpue_kg_km2>0)]))
-    # 
+    dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
+                  latitude <= max(latitude[which(cpue_kg_km2>0)]),
+                  longitude > min(longitude[which(cpue_kg_km2>0)]),
+                  longitude < max(longitude[which(cpue_kg_km2>0)]))
+
   # rescale variables
   sub$depth = scale(log(sub$depth))
   sub$o2 = scale(log(sub$ROMS_oxygen_bottom_era5_monthly))
@@ -125,6 +125,7 @@ for(i in 1:nrow(df)) {
   
   if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/model_ROMS_",i,".rds"))
   
+  print(paste("model",i,df$covariate[i],sep=' ')) # just tracking the date of each haul to match to each var
 }
 Sys.time() - start.time
 
