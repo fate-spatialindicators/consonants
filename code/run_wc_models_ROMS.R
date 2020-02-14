@@ -124,9 +124,9 @@ for(i in 1:nrow(df)) {
   ), 
   silent=TRUE)
   
-  if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/model_ROMS_",i,".rds"))
+  if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/model_ROMS_1_",i,".rds"))
   
-  print(paste("model",i,df$covariate[i],sep=' ')) # just tracking the date of each haul to match to each var
+  print(paste("species",i,df$covariate[i],sep=' ')) # just tracking the date of each haul to match to each var
 }
 Sys.time() - start.time
 
