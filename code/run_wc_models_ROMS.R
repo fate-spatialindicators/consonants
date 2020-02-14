@@ -71,7 +71,8 @@ for(i in 1:nrow(df)) {
   
   # drop points with missing values
   sub = dplyr::filter(sub, 
-                      !is.na(o2),!is.na(temp),!is.na(depth))
+                      !is.na(o2),!is.na(temp),!is.na(depth),
+                      !is.nan(o2),!is.nan(temp),!is.nan(depth))
   # filter years based on covariate. for ROMS right now, only do 2003-2010
   sub = dplyr::filter(sub, year%in%seq(2003,2010))
   
