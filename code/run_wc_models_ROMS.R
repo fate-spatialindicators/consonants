@@ -64,14 +64,15 @@ for(i in 1:nrow(df)) {
     #              longitude > min(longitude[which(cpue_kg_km2>0)]),
     #              longitude < max(longitude[which(cpue_kg_km2>0)]))
 
-  # rescale variables
-  sub$depth = scale(log(sub$depth))
-  sub$o2 = scale(log(sub$ROMS_oxygen_bottom_era5_monthly))
-  sub$temp = scale(sub$ROMS_temp_bottom_era5_monthly)
-  
-  # drop points with missing values
+  # drop points with missing values and recale to be N(0,1)
   sub = dplyr::filter(sub, 
-                      !is.na(o2),!is.na(temp),!is.na(depth))
+    !is.na(ROMS_oxygen_bottom_era5_monthly),
+    !is.na(ROMS_temp_bottom_era5_monthly),
+    !is.na(depth)) %>% 
+    dplyr::mutate(depth = scale(log(depth)),
+      o2 = scale(ROMS_oxygen_bottom_era5_monthly),
+      temp = scale(ROMS_temp_bottom_era5_monthly))
+  
   # filter years based on covariate. for ROMS right now, only do 2003-2010
   sub = dplyr::filter(sub, year%in%seq(2003,2010))
   
