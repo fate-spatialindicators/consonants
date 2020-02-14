@@ -49,7 +49,7 @@ df = expand.grid("species" = unique(dat$species),
                  spatial_only=c(FALSE), 
                  depth_effect = c(TRUE,FALSE),
                  time_varying = c(FALSE),
-                 covariate = c("ROMS_oxygen_bottom_era5_monthly","ROMS_temp_bottom_era5_monthly")
+                 covariate = c("ROMS_temp_bottom_era5_monthly","ROMS_oxygen_bottom_era5_monthly")
 )
 saveRDS(df, "output/wc/models_ROMS.RDS")
 
@@ -58,11 +58,11 @@ for(i in 1:nrow(df)) {
   
   # filter by species, and select range within occurrences
   sub = dplyr::filter(dat, 
-                      species == df$species[i]) %>% 
-    dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
-                  latitude <= max(latitude[which(cpue_kg_km2>0)]),
-                  longitude > min(longitude[which(cpue_kg_km2>0)]),
-                  longitude < max(longitude[which(cpue_kg_km2>0)]))
+                      species == df$species[i])# %>% 
+    #dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
+    #              latitude <= max(latitude[which(cpue_kg_km2>0)]),
+    #              longitude > min(longitude[which(cpue_kg_km2>0)]),
+    #              longitude < max(longitude[which(cpue_kg_km2>0)]))
 
   # rescale variables
   sub$depth = scale(log(sub$depth))
@@ -71,8 +71,7 @@ for(i in 1:nrow(df)) {
   
   # drop points with missing values
   sub = dplyr::filter(sub, 
-                      !is.na(o2),!is.na(temp),!is.na(depth),
-                      !is.nan(o2),!is.nan(temp),!is.nan(depth))
+                      !is.na(o2),!is.na(temp),!is.na(depth))
   # filter years based on covariate. for ROMS right now, only do 2003-2010
   sub = dplyr::filter(sub, year%in%seq(2003,2010))
   
