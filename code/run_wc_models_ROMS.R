@@ -49,8 +49,8 @@ df = expand.grid("species" = unique(dat$species),
                  spatial_only=c(FALSE), 
                  depth_effect = c(TRUE,FALSE),
                  time_varying = c(FALSE),
-                 covariate = c("ROMS_temp_bottom_era5_monthly","ROMS_oxygen_bottom_era5_monthly")
-)
+                 covariate = c("ROMS_temp_bottom_era5_monthly"))#,"ROMS_oxygen_bottom_era5_monthly")
+
 saveRDS(df, "output/wc/models_ROMS.RDS")
 
 start.time <- Sys.time()
