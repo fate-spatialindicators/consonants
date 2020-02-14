@@ -41,21 +41,30 @@ plot(df$range[which(df$depth_effect==TRUE & df$covariate=="temp")],
   xlab="Depth included",ylab="Depth not included",
   main="temp")
 
-plot(df$range[which(df$depth_effect==TRUE & df$covariate=="o2")],
-  df$range[which(df$depth_effect==FALSE & df$covariate=="o2")],
-  xlim=c(0,20),xlab="Depth included",ylab="Depth not included",
-  main="o2")
-
 df = df[complete.cases(df),]
 
 pdf(paste0("plots/",region,"-temp_range.pdf"))
 level_order = dplyr::filter(df, !is.na(range), covariate=="temp",
   depth_effect == TRUE, range_se < 5) %>%
   dplyr::arrange(range) %>% select(species)
-dplyr::filter(df, !is.na(range), covariate=="temp", depth_effect==TRUE, range_se < 5) %>% 
+dplyr::filter(df, !is.na(range), covariate=="temp", 
+  range_se < 5,depth_effect == TRUE) %>% 
 ggplot(aes(factor(species, level=level_order$species), range)) +
   geom_pointrange(aes(ymin=range-2*range_se, 
-    ymax=range+2*range_se), col="darkblue") +
+    ymax=range+2*range_se)) +
+  coord_flip() + xlab("Species") + ylab("Range") + 
+  ggtitle(paste0("Temperature range - ",region," survey"))
+dev.off()
+
+pdf(paste0("plots/",region,"-temp_range2.pdf"))
+level_order = dplyr::filter(df, !is.na(range), covariate=="temp",
+  depth_effect == TRUE, range_se < 1) %>%
+  dplyr::arrange(range) %>% select(species)
+dplyr::filter(df, !is.na(range), covariate=="temp", range_se < 1,
+  species %in% level_order$species) %>% 
+  ggplot(aes(factor(species, level=level_order$species), range,col=depth_effect)) +
+  geom_pointrange(aes(ymin=range-2*range_se, 
+    ymax=range+2*range_se)) +
   coord_flip() + xlab("Species") + ylab("Range") + 
   ggtitle(paste0("Temperature range - ",region," survey"))
 dev.off()
@@ -85,7 +94,7 @@ dplyr::filter(df, !is.na(hi), covariate=="temp", depth_effect==TRUE,hi_se < 5) %
 dev.off()
 
 pdf(paste0("plots/",region,"-temp_reduction.pdf"))
-level_order = dplyr::filter(df, !is.na(hi), covariate=="temp",
+level_order = dplyr::filter(df, !is.na(reduction), covariate=="temp",
   depth_effect == TRUE, reduction_se < 5) %>%
   dplyr::arrange(reduction) %>% select(species)
 dplyr::filter(df, !is.na(reduction), covariate=="temp", depth_effect==TRUE,reduction_se < 5) %>% 
@@ -94,6 +103,19 @@ dplyr::filter(df, !is.na(reduction), covariate=="temp", depth_effect==TRUE,reduc
     ymax=reduction+2*reduction_se),col="darkblue") +
   coord_flip() + xlab("Species") + ylab("Range") + 
   ggtitle(paste0("Reduction from peak - ",region," survey"))
+dev.off()
+
+pdf(paste0("plots/",region,"-temp_reduction2.pdf"))
+level_order = dplyr::filter(df, !is.na(reduction), covariate=="temp",
+  depth_effect == TRUE, reduction_se < 5) %>%
+  dplyr::arrange(reduction) %>% select(species)
+dplyr::filter(df, !is.na(reduction), covariate=="temp", reduction_se < 5,
+  species %in% level_order$species) %>% 
+  ggplot(aes(factor(species, level=level_order$species), reduction,col=depth_effect)) +
+  geom_pointrange(aes(ymin=reduction-2*reduction_se, 
+    ymax=reduction+2*reduction_se)) +
+  coord_flip() + xlab("Species") + ylab("Reduction") + 
+  ggtitle(paste0("Temperature range - ",region," survey"))
 dev.off()
 
 # o2 plots here - wc and bc species
@@ -108,6 +130,21 @@ dplyr::filter(df, !is.na(range), covariate=="o2", range_se < 1,depth_effect == T
   coord_flip() + xlab("Species") + ylab("Range") + 
   ggtitle(paste0("o2 range - ",region," survey"))
 dev.off()
+
+
+pdf(paste0("plots/",region,"-o2_range2.pdf"))
+level_order = dplyr::filter(df, !is.na(range), covariate=="o2",
+  depth_effect == TRUE, range_se < 1) %>%
+  dplyr::arrange(range) %>% select(species)
+dplyr::filter(df, !is.na(range), covariate=="o2", range_se < 1,
+  species %in% level_order$species) %>% 
+  ggplot(aes(factor(species, level=level_order$species), range,col=depth_effect)) +
+  geom_pointrange(aes(ymin=range-2*range_se, 
+    ymax=range+2*range_se)) +
+  coord_flip() + xlab("Species") + ylab("Range") + 
+  ggtitle(paste0("o2 range - ",region," survey"))
+dev.off()
+
 
 pdf(paste0("plots/",region,"-o2_low.pdf"))
 level_order = dplyr::filter(df, !is.na(low), covariate=="o2",
@@ -143,4 +180,17 @@ dplyr::filter(df, !is.na(reduction), covariate=="o2", depth_effect==TRUE,reducti
     ymax=reduction+2*reduction_se),col="darkblue") +
   coord_flip() + xlab("Species") + ylab("Range") + 
   ggtitle(paste0("Reduction from peak - ",region," survey"))
+dev.off()
+
+pdf(paste0("plots/",region,"-o2_reduction2.pdf"))
+level_order = dplyr::filter(df, !is.na(reduction), covariate=="o2",
+  depth_effect == TRUE, reduction_se < 5) %>%
+  dplyr::arrange(reduction) %>% select(species)
+dplyr::filter(df, !is.na(reduction), covariate=="o2", reduction_se < 5,
+  species %in% level_order$species) %>% 
+  ggplot(aes(factor(species, level=level_order$species), reduction,col=depth_effect)) +
+  geom_pointrange(aes(ymin=reduction-2*reduction_se, 
+    ymax=reduction+2*reduction_se)) +
+  coord_flip() + xlab("Species") + ylab("Reduction") + 
+  ggtitle(paste0("o2 range - ",region," survey"))
 dev.off()
