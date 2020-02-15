@@ -51,7 +51,7 @@ df = expand.grid("species" = unique(dat$species),
                  time_varying = c(FALSE),
                  covariate = c("ROMS_temp_bottom_era5_monthly"))#,"ROMS_oxygen_bottom_era5_monthly")
 
-saveRDS(df, "output/wc/models_ROMS.RDS")
+saveRDS(df, "output/wc/jacox_ROMS/models_ROMS.RDS")
 
 start.time <- Sys.time()
 for(i in 1:nrow(df)) {
@@ -124,7 +124,7 @@ for(i in 1:nrow(df)) {
   ), 
   silent=TRUE)
   
-  if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/model_ROMS_1_",i,".rds"))
+  if(class(m)!="try-error") saveRDS(m, file=paste0("output/wc/jacox_ROMS/model_ROMS_1_",i,".rds"))
   
   print(paste("species",i,df$covariate[i],sep=' ')) # just tracking the date of each haul to match to each var
 }
