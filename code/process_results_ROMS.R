@@ -1,11 +1,12 @@
 library(ggplot2)
 library(dplyr)
 
+# read in estimates from all the ROMS models
 region="wc" #c("goa","wc")[2]
 df = readRDS(paste0("output/",region,"/models_ROMS.RDS"))
 
 for(i in 1:nrow(df)) {
-  fname = paste0("output/",region,"/model_ROMS_",i,".rds")
+  fname = paste0("output/",region,"/model_ROMS_1_",i,".rds")
   if(file.exists(fname)) {
     
   m = readRDS(fname)
@@ -24,8 +25,39 @@ for(i in 1:nrow(df)) {
   }
 }
 
-# remove junk columns
-df = dplyr::select(df, -spatial_only, -time_varying)
+# remove junk columns and add a column descriminating ROMS vs in-situ
+df_roms = dplyr::select(df, -spatial_only, -time_varying) %>% 
+  dplyr::mutate("covariate"="ROMS")
+
+# copy the same block but read in estimates from empirical
+region="wc" #c("goa","wc")[2]
+df = readRDS(paste0("output/",region,"/2003-2010 empirical/models_2003-2010.RDS"))
+df$low = df$low_se = df$hi = df$hi_se = df$range = df$range_se = df$peak = df$peak_se = df$reduction = df$reduction_se
+for(i in 1:nrow(df)) {
+  fname = paste0("output/",region,"/2003-2010 empirical/model_",i,"_2003-2010.rds")
+  if(file.exists(fname)) {
+    
+    m = readRDS(fname)
+    sd_report <- summary(m$sd_report)
+    params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
+    df$low[i] = params["quadratic_low","Estimate"]
+    df$low_se[i] = params["quadratic_low","Std. Error"]
+    df$hi[i] = params["quadratic_hi","Estimate"]
+    df$hi_se[i] = params["quadratic_hi","Std. Error"]
+    df$range[i] = params["quadratic_range","Estimate"]
+    df$range_se[i] = params["quadratic_range","Std. Error"]
+    df$peak[i] = params["quadratic_peak","Estimate"]
+    df$peak_se[i] = params["quadratic_peak","Std. Error"]
+    df$reduction[i] = params["quadratic_reduction","Estimate"]
+    df$reduction_se[i] = params["quadratic_reduction","Std. Error"]  
+  }
+}
+
+# remove junk columns and add a 
+df = dplyr::select(df, -spatial_only, -time_varying) %>% 
+  dplyr::mutate("covariate"=ROMS)
+
+
 
 # save results
 write.csv(df, file=paste0("output/",region,"_output_ROMS.csv"))
