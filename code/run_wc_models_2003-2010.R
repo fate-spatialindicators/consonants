@@ -37,9 +37,9 @@ df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
   depth_effect = c(TRUE,FALSE),
   time_varying = c(FALSE),
-  covariate = c("o2","temp")
+  covariate = c("temp")
 )
-saveRDS(df, "output/wc/models_2003-2010.RDS")
+saveRDS(df, "output/wc/2003-2010 empirical/models_2003-2010.RDS")
 
 for(i in 1:nrow(df)) {
   
