@@ -111,7 +111,7 @@ for(i in 1:nrow(df)) {
     #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
     
     if(class(m)!="try-error") {
-      saveRDS(m, file=paste0("output/wc/model_",i,"_2003-2010.rds"))
+      saveRDS(m, file=paste0("output/wc/2003-2010 empirical/model_",i,"_2003-2010.rds"))
       #sd_report <- summary(m$sd_report)
       #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
     }
