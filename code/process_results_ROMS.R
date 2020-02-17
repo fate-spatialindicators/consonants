@@ -79,3 +79,29 @@ dplyr::filter(df, !is.na(range), range_se < 1,depth_effect == TRUE,
   coord_flip() + xlab("Species") + ylab("Range") + 
   ggtitle(paste0("Temperature range - ",region," survey"))
 dev.off()
+
+
+# also plot the empirical range of temps observed in both, 2003-2010
+dat = readRDS("survey_data/joined_nwfsc_data.rds")
+temp_survey = dat %>% dplyr::filter(species %in% level_order$species,
+  year %in% seq(2003,2010)) %>% 
+  group_by(species) %>% 
+  summarize(temp_survey=diff(range(temp[which(cpue_kg_km2>0)],na.rm=T)))
+
+ROMS.names <- c("ROMS_oxygen_bottom_era5_monthly","ROMS_temp_bottom_era5_monthly")
+ROMS.RDS.names <- paste0("survey_data/joined_nwfsc_data",ROMS.names,".rds")
+
+#dat = readRDS("survey_data/joined_nwfsc_data.rds")
+dat_temp_bottom <- readRDS(ROMS.RDS.names[2])
+
+temp_roms = dat_temp_bottom %>% dplyr::filter(species %in% level_order$species,
+  year %in% seq(2003,2010)) %>% 
+  group_by(species) %>% 
+  summarize(temp_roms=diff(range(ROMS_temp_bottom_era5_monthly[which(cpue_kg_km2>0)],na.rm=T)))
+
+temp_survey = dplyr::left_join(temp_survey, temp_roms)
+
+pdf(paste0("plots/",region,"-survey_range_vs_roms_range.pdf"))
+ggplot(temp_survey, aes(temp_survey, temp_roms,label=species)) + 
+  geom_text() + geom_abline(intercept=0,slope=1,col="red")
+dev.off()
