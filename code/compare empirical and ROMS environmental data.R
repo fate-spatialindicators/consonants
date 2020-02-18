@@ -86,6 +86,6 @@ ggplot(data = dat_2003_2010,
   geom_abline(data = dplyr::filter(dat, year%in%seq(2003,2010)),
               slope=1) +
   facet_wrap(~year, nrow=5) +
-  labs(x="Empirical bottom temperature",y="ROMS bottom oxygen\n(monthly average)")
+  labs(x="Empirical bottom oxygen",y="ROMS bottom oxygen\n(monthly average)")
 
 ggsave(here::here('plots','empirical v ROMS bottom oxygen, faceted by year.png'))
