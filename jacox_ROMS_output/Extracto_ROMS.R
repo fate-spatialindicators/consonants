@@ -28,6 +28,9 @@ nc=here::here(
 )
 tidync(nc) # use this to determine varname
 
+#tidync(nc) %>% hyper_tibble(select_var = "oxygen")
+#tidync(nc) %>% hyper_tibble(select_var = "lon")
+
 ################
 ################
 varname="oxygen" #### need to change for O2
