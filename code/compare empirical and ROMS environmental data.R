@@ -15,6 +15,7 @@ dat <- dat_temp_bottom %>%
   left_join(dat_oygen_bottom)
 
 dat_2003_2010 <- dplyr::filter(dat, year%in%seq(2003,2010))
+#unique(dat_2003_2010$year [which(is.na(dat_2003_2010$o2) == FALSE)])
 
 # visual comparison of empirical and ROMS env data 
 
@@ -37,7 +38,7 @@ ggplot(data = dat_2003_2010,
                                 )
                             ) +
   geom_point() +
-  geom_abline(data = dplyr::filter(dat, year%in%seq(2003,2010)),
+  geom_abline(data = dat_2003_2010),
               slope=1) +
   labs(x="Empirical bottom temperature",y="ROMS bottom temperature\n(monthly average)")
 
@@ -51,7 +52,7 @@ ggplot(data = dat_2003_2010,
        )
 ) +
   geom_point() +
-  geom_abline(data = dplyr::filter(dat, year%in%seq(2003,2010)),
+  geom_abline(data = dat_2003_2010),
               slope=1) +
   facet_wrap(~year, nrow=5) +
   labs(x="Empirical bottom temperature",y="ROMS bottom temperature\n(monthly average)")
@@ -63,13 +64,13 @@ ggsave(here::here('plots','empirical v ROMS bottom temp, faceted by year.png'))
 #################################################
 
 ggplot(data = dat_2003_2010, 
-       aes(x=temp, 
+       aes(x=o2, 
            y = ROMS_oxygen_bottom_era5_monthly, 
            colour=as.factor(year)
        )
 ) +
   geom_point() +
-  geom_abline(data = dplyr::filter(dat, year%in%seq(2003,2010)),
+  geom_abline(data = dat_2003_2010,
               slope=1) +
   labs(x="Empirical bottom oxygen",y="ROMS bottom oxygen\n(monthly average)")
 
@@ -77,13 +78,13 @@ ggsave(here::here('plots','empirical v ROMS bottom oxygen.png'))
 
 # bottom temp, faceted
 ggplot(data = dat_2003_2010, 
-       aes(x=temp, 
+       aes(x=o2, 
            y = ROMS_oxygen_bottom_era5_monthly,
            colour = as.factor(year)
        )
 ) +
   geom_point() +
-  geom_abline(data = dplyr::filter(dat, year%in%seq(2003,2010)),
+  geom_abline(data = dat_2003_2010,
               slope=1) +
   facet_wrap(~year, nrow=5) +
   labs(x="Empirical bottom oxygen",y="ROMS bottom oxygen\n(monthly average)")
