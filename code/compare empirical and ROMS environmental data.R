@@ -52,7 +52,7 @@ ggplot(data = dat_2003_2010,
        )
 ) +
   geom_point() +
-  geom_abline(data = dat_2003_2010),
+  geom_abline(data = dat_2003_2010,
               slope=1) +
   facet_wrap(~year, nrow=5) +
   labs(x="Empirical bottom temperature",y="ROMS bottom temperature\n(monthly average)")
