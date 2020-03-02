@@ -37,7 +37,7 @@ df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
   depth_effect = c(TRUE,FALSE),
   time_varying = c(FALSE),
-  covariate = c("o2","temp")
+  covariate = c("temp","o2")
 )
 saveRDS(df, "output/wc/models.RDS")
 
@@ -56,15 +56,15 @@ for(i in 1:nrow(df)) {
   sub$o2 = scale(log(sub$o2))
   sub$temp = scale(sub$temp)
 
-  # drop points with missing values
-  sub = dplyr::filter(sub, 
-    !is.na(o2),!is.na(temp),!is.na(depth))
+  # drop points with missing depth values
+  sub = dplyr::filter(sub, !is.na(depth))
   # filter years based on covariate
   if(df$covariate[i]=="o2") {
-    sub = dplyr::filter(sub, year%in%seq(2010,2015))
+    sub = dplyr::filter(sub, year%in%seq(2010,2015)) %>% 
+      dplyr::filter(!is.na(o2))
   } else {
-    # temp observed for all years
-    sub = sub
+    # temp observed for all years - but check for missing vals
+    sub = dplyr::filter(sub, !is.na(temp))
   }
   
   # rename variables to make code generic

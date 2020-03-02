@@ -118,6 +118,11 @@ dplyr::filter(df, !is.na(reduction), covariate=="temp", reduction_se < 5,
   ggtitle(paste0("Temperature range - ",region," survey"))
 dev.off()
 
+# look at empirical depth bands versus these estimated ranges.
+# for wc species, some spp of rockfish have a big difference between 
+# whether depth is included or not
+
+
 # o2 plots here - wc and bc species
 pdf(paste0("plots/",region,"-o2_range.pdf"))
 level_order = dplyr::filter(df, !is.na(range), covariate=="o2",
