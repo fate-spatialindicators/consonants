@@ -6,7 +6,7 @@ library(sp)
 library(sdmTMB)
 library(dplyr)
 
-dat = readRDS("AK_BTS_all_spp.rds")
+dat = readRDS("spatial_trend_env/data/AK_BTS.rds")
 
 dat = dplyr::filter(dat, SURVEY == "GOA") %>% 
   dplyr::mutate(ID = paste(LATITUDE,LONGITUDE,DATE)) %>% 
@@ -53,5 +53,25 @@ temp_model <- sdmTMB(formula = temp ~ -1 + log_depth_scaled +
   control = sdmTMBcontrol(step.min = 0.01, step.max = 1))
 
 # load prediction grid
+goa_grid <- readRDS("spatial_trend_env/data/GOA_predict_data.rds")
+goa_grid <- goa_grid %>% filter(year == 2019) %>% dplyr::select(-year)
+goa_grid$loc = seq(1,nrow(goa_grid))
 
+# truncate limits based on haul filters for OR above
+df = expand.grid(loc=unique(goa_grid$loc),
+                 year = unique(dat$year))
+df = left_join(df,goa_grid,by="loc")
+df$jday_scaled = 0
+df$jday_scaled2 = 0
+
+pred_temp = predict(temp_model,
+                    newdata=df,
+                    xy_cols=c("X","Y"),
+                    return_tmb_object = FALSE)
+pred_temp_tmb = predict(temp_model,
+                    newdata=df,
+                    xy_cols=c("X","Y"),
+                    return_tmb_object = TRUE)
+
+save(temp_model,pred_temp,pred_temp_tmb,file="spatial_trend_env/goa_temp.Rdata")
 
