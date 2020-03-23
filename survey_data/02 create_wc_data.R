@@ -23,6 +23,8 @@ catch$common_name = tolower(catch$common_name)
 
 haul = readRDS("survey_data/wcbts_haul_2019-08-01.rds")
 
+#haul = dplyr::select(haul, date_yyyymmdd,depth_hi_prec_m,latitude_dd,longitude_dd,temperature_at_gear_c_der)
+#write.table(haul, "data_for_mike.csv",sep=",",row.names=FALSE)
 haul$year = as.numeric(substr(haul$date_yyyymmdd,1,4))
 haul$month = as.numeric(substr(haul$date_yyyymmdd,5,6))
 haul$day = as.numeric(substr(haul$date_yyyymmdd,7,8))

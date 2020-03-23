@@ -5,12 +5,11 @@ library(sp)
 
 dat = readRDS("survey_data/joined_goa_data.rds")
 
-dplyr::group_by(dat, species) %>% 
-  summarize(min = min(latitude_dd[which(cpue_kg_km2 > 0)]),
-    max = max(latitude_dd[which(cpue_kg_km2 > 0)])) %>% 
-  as.data.frame() %>% arrange(min)
-
-dat = dplyr::filter(dat, species!="butterfly sculpin")
+# filter out species with at least 100 observations
+dat = dplyr::group_by(dat, species) %>% 
+  mutate(n = length(which(cpue_kg_km2 > 0))) %>% 
+  dplyr::filter(n > 100) %>% 
+  dplyr::select(-n)
 
 # UTM transformation
 dat_ll = dat
@@ -33,7 +32,6 @@ df = expand.grid("species" = unique(dat$species),
   covariate = c("temp"),
   depth_effect = c(TRUE,FALSE)
 )
-df = dplyr::filter(df, species!="")
 
 saveRDS(df, "output/goa/models.RDS")
 
