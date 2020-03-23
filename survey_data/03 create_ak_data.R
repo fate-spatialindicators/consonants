@@ -1,6 +1,6 @@
 library(dplyr)
 
-d = readRDS("survey_data/AK_BTS.rds")
+d = readRDS("survey_data/AK_BTS_all_spp.rds")
 
 names(d) = tolower(names(d))
 
