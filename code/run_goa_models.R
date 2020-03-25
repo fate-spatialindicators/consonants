@@ -60,7 +60,8 @@ for(i in 1:nrow(df)) {
   sub = dplyr::rename(sub, enviro = as.character(df$covariate[i]))
   
   # make spde
-  spde <- make_spde(x = sub$longitude, y = sub$latitude, 
+  spde <- make_spde(x = sub$longitude_dd, 
+    y = sub$latitude_dd, 
     n_knots = 250)
   
   formula = paste0("cpue_kg_km2 ~ -1")
