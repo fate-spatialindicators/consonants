@@ -22,7 +22,7 @@ df = rbind(wc_df, goa_df) %>%
   dplyr::mutate(`Depth included` = log(`Depth included`),
     `Depth omitted` = log(`Depth omitted`))
 
-pdf("Figure_S1_range_sensitivity.pdf")
+pdf("plots/Figure_S1_range_sensitivity.pdf",height=5,width=8)
 ggplot(df, aes(`Depth included`,`Depth omitted`)) + 
   geom_point(col="dark blue",size=2,alpha=0.6) + 
   facet_wrap(~region) + theme_sleek()
