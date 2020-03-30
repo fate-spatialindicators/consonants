@@ -1,7 +1,15 @@
 library(tidyverse)
 library(ggplot2)
 library(ggsidekick)
+
 df = read.csv("output/wc_output.csv")
+
+summaries = read.csv("output/summary_statistics_wc.csv") 
+# filter out cases where spp haven'tbeen observed at least
+# 20 times / year
+summaries = dplyr::filter(summaries, min_n >= 20)
+df = dplyr::filter(df, species %in% summaries$species)
+
 #saveRDS(df,file=paste0("output/",region,"_output.rds"))
 
 wc_df = dplyr::filter(df, covariate=="temp") %>%
@@ -14,7 +22,14 @@ wc_df = dplyr::filter(wc_df, species %in% c("pacific spiny dogfish",
   "dungeness crab","brown cat shark","grooved tanner crab",
   "filetail cat shark") == FALSE)
 
+
 df = read.csv("output/goa_output.csv")
+summaries = read.csv("output/summary_statistics_goa.csv") 
+# filter out cases where spp haven'tbeen observed at least
+# 20 times / year
+summaries = dplyr::filter(summaries, min_n >= 20)
+df = dplyr::filter(df, species %in% summaries$species)
+
 goa_df = dplyr::filter(df, covariate=="temp") %>%
   dplyr::select(species,range,depth_effect) %>% 
   pivot_wider(names_from = depth_effect, values_from=range)

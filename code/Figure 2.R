@@ -8,12 +8,25 @@ wc_df = dplyr::filter(df, covariate=="temp",depth_effect=="FALSE") %>%
   dplyr::select(species,range,range_se)
 wc_df$region = "USA West Coast"
 
+summaries = read.csv("output/summary_statistics_wc.csv") 
+# filter out cases where spp haven'tbeen observed at least
+# 20 times / year
+summaries = dplyr::filter(summaries, min_n >= 20)
+wc_df = dplyr::filter(wc_df, species %in% summaries$species)
+
 # filter out the odd sharks and inverts
 wc_df = dplyr::filter(wc_df, species %in% c("pacific spiny dogfish",
   "dungeness crab","brown cat shark","grooved tanner crab",
   "filetail cat shark") == FALSE)
 
 df = read.csv("output/goa_output.csv")
+
+summaries = read.csv("output/summary_statistics_wc.csv") 
+# filter out cases where spp haven'tbeen observed at least
+# 20 times / year
+summaries = dplyr::filter(summaries, min_n >= 20)
+df = dplyr::filter(df, species %in% summaries$species)
+
 goa_df = dplyr::filter(df, covariate=="temp",depth_effect=="FALSE") %>%
   dplyr::select(species,range,range_se)
 goa_df$region = "Gulf of Alaska"
