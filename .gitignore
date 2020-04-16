@@ -7,3 +7,5 @@
 .httr-oauth
 .httr-oauth-SUSPENDED
 .DS_Store
+*.Rdata
+*.mat
