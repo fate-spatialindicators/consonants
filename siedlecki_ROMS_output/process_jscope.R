@@ -20,7 +20,15 @@ for(i in 1:nrow(target)) {
 # read matlab files
 library(R.matlab)
 dat_2018 <- readMat("siedlecki_ROMS_output/2018.mat")
-str(dat_2018)
+str(dat_2018) # output is list of matrices associated with $coords
 
-# output is list of matrices associated with $coords
-head(dat_2018$coords[[1]])
+# extract and reformat into long data frame
+str(dat_2018$coords[[2]])
+dat_2018$coords[[1]][,1]#unique lat
+dat_2018$coords[[2]][1,]#unique lon
+
+coords <- expand.grid(lat = dat_2018$coords[[1]][,1], lon = dat_2018$coords[[2]][1,], 
+                      KEEP.OUT.ATTRS = FALSE)
+
+dat_2018_df <- cbind(coords, bottom_temp = c(dat_2018$bt), bottom_o2 = c(dat_2018$bottoxy)) 
+# TO DO: double check that mapping is correct using above method and extend to unpack data from multiple time steps
