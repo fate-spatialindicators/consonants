@@ -9,26 +9,30 @@ target = drive_ls(as_id("https://drive.google.com/drive/u/0/folders/10VmLS2h2TCC
 #target = drive_ls(as_id("https://drive.google.com/drive/u/0/folders/15PJPu3GmUSQeOfAOKF12PEtcgkwUrJSC")) #monthly
 #target = drive_ls(as_id("https://drive.google.com/drive/u/0/folders/1IN2kPJwWXerl44vyXabg7jAE2JOFiiCM")) #daily
 
+# pull in each file as dribble
 for(i in 1:nrow(target)) {
-  # pull in each file as dribble
   drive_download(file=target[i,], 
                  path=paste0("siedlecki_ROMS_output/",target$name[i]), 
                  overwrite = TRUE)
 }
 
-
 # read matlab files
 library(R.matlab)
-dat_2018 <- readMat("siedlecki_ROMS_output/2018.mat")
-str(dat_2018) # output is list of matrices associated with $coords
+years <- 2009:2018
+dat_yr <- data.frame(lat = NA, lon = NA, bottom_temp = NA, bottom_o2 = NA, year = NA)
 
-# extract and reformat into long data frame
-str(dat_2018$coords[[2]])
-dat_2018$coords[[1]][,1]#unique lat
-dat_2018$coords[[2]][1,]#unique lon
-
-coords <- expand.grid(lat = dat_2018$coords[[1]][,1], lon = dat_2018$coords[[2]][1,], 
+# extract and reformat into long data frame with all time units
+for(i in 1:length(years)){
+  dat_tmp <- readMat(paste0("siedlecki_ROMS_output/",years[i],".mat"))
+  #str(dat_tmp) # output is list of matrices associated with $coords
+  #str(dat_tmp$coords[[2]])
+  dat_tmp$coords[[1]][,1]#unique lat
+  dat_tmp$coords[[2]][1,]#unique lon
+  coords <- expand.grid(lat = dat_tmp$coords[[1]][,1], lon = dat_tmp$coords[[2]][1,], 
                       KEEP.OUT.ATTRS = FALSE)
+  dat_tmp_df <- cbind(coords, bottom_temp = c(dat_tmp$bt), bottom_o2 = c(dat_tmp$bottoxy), year = years[i])
+  dat_yr <- rbind(na.omit(dat_yr), na.omit(dat_tmp_df))
+}
 
-dat_2018_df <- cbind(coords, bottom_temp = c(dat_2018$bt), bottom_o2 = c(dat_2018$bottoxy)) 
-# TO DO: double check that mapping is correct using above method and extend to unpack data from multiple time steps
+summary(dat_yr)
+saveRDS(dat_yr, "siedlecki_ROMS_output/annual_df.rds")
