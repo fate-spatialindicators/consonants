@@ -32,8 +32,9 @@ haul$day = as.numeric(substr(haul$date_yyyymmdd,7,8))
 haul = dplyr::rename(haul, 
   o2 = o2_at_gear_ml_per_l_der,
   degc = temperature_at_gear_c_der,
+  sal = salinity_at_gear_psu_der,
   depthm=depth_hi_prec_m) %>% 
-  dplyr::select(o2,degc,depthm,latitude_dd,longitude_dd,
+  dplyr::select(o2,degc,sal,depthm,latitude_dd,longitude_dd,
     performance,trawl_id)
 
 dat = dplyr::left_join(catch, haul)
