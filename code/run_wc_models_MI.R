@@ -101,7 +101,7 @@ df = data.frame(
   spatial_only = rep(FALSE,9), 
   depth_effect = rep(FALSE,9),
   time_varying = rep(FALSE,9),
-  threshold_parameter = c(rep("none",5),rep("o2",2),rep("mi",2)),
+  threshold = c(rep(FALSE,5),rep(TRUE,4)),
   threshold_function = c(rep("linear",5),rep(c("linear","logistic"),2)),
   covariate1 = c("temp","o2","mi","temp","temp",rep("o2",2),rep("mi",2)),
   covariate2 = c(rep("none",3),"o2","o2",rep("none",4)),
@@ -142,7 +142,7 @@ for(i in 1:nrow(df)) {
     }
     
     # fit model
-    if(df$threshold_parameter[i] != "none"){
+    if(df$threshold[i] == TRUE){
       m <- try(sdmTMB(
       formula = as.formula(formula),
       spde = spde,
@@ -151,9 +151,9 @@ for(i in 1:nrow(df)) {
       data = sub,
       anisotropy = TRUE,
       spatial_only = df$spatial_only[i],
-      threshold_parameter = df$threshold_parameter[i],
+      threshold_parameter = df$enviro1,
       threshold_function = df$threshold_function[i],
-    ), silent=TRUE)
+    ), silent=FALSE)
     } else {
       m <- try(sdmTMB(
         formula = as.formula(formula),
@@ -163,7 +163,7 @@ for(i in 1:nrow(df)) {
         data = sub,
         anisotropy = TRUE,
         spatial_only = df$spatial_only[i],
-      ), silent=TRUE)
+      ), silent=FALSE)
     }
     
     if(class(m)!="try-error") {
