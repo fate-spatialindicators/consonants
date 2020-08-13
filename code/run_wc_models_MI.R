@@ -101,7 +101,7 @@ df = expand.grid("species" = unique(dat$species),
   spatial_only = c(FALSE), 
   depth_effect = c(FALSE),
   time_varying = c(FALSE),
-  threshold_parameter = c("NULL","o_2"),
+  threshold_parameter = c("NULL","o2"),
   threshold_function = c("linear","logistic"),
   covariate = c("temp","o2","mi")
 )
@@ -110,6 +110,7 @@ saveRDS(df, "output/wc/models_MI.RDS")
 # run models for each combination of settings/covariates in df ------------
 for(i in 1:nrow(df)) {
 
+  sub <- dat
   # rename variables to make code generic
   sub = dplyr::rename(sub, enviro = as.character(df$covariate[i]))
   
@@ -145,8 +146,8 @@ for(i in 1:nrow(df)) {
       data = sub,
       anisotropy = TRUE,
       spatial_only = df$spatial_only[i],
-      threshold_parameter = df$threshold_parameter,
-      threshold_function = df$threshold_function,
+      threshold_parameter = df$threshold_parameter[i],
+      threshold_function = df$threshold_function[i],
     ), silent=TRUE)
     
     #sd_report <- summary(m$sd_report)
