@@ -97,13 +97,15 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
   latitude = latitude_dd)
 
 # create combination of covariates and threshold responses for different models
-df = expand.grid("species" = unique(dat$species),
-  spatial_only = c(FALSE), 
-  depth_effect = c(FALSE),
-  time_varying = c(FALSE),
-  threshold_parameter = c("NULL","o2"),
-  threshold_function = c("linear","logistic"),
-  covariate = c("temp","o2","mi")
+df = data.frame(
+  spatial_only = rep(FALSE,9), 
+  depth_effect = rep(FALSE,9),
+  time_varying = rep(FALSE,9),
+  threshold_parameter = c(rep("none",5),rep("o2",2),rep("mi",2)),
+  threshold_function = c(rep("linear",5),rep(c("linear","logistic"),2)),
+  covariate1 = c("temp","o2","mi","temp","temp",rep("o2",2),rep("mi",2)),
+  covariate2 = c(rep("none",3),"o2","o2",rep("none",4)),
+  interaction = c(rep(FALSE,4),TRUE,rep(FALSE,4))
 )
 saveRDS(df, "output/wc/models_MI.RDS")
 
@@ -150,13 +152,9 @@ for(i in 1:nrow(df)) {
       threshold_function = df$threshold_function[i],
     ), silent=TRUE)
     
-    #sd_report <- summary(m$sd_report)
-    #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
-    
     if(class(m)!="try-error") {
       saveRDS(m, file=paste0("output/wc/model_",i,"_MI.rds"))
       #sd_report <- summary(m$sd_report)
-      #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
     }
   } # end try on spde
   
