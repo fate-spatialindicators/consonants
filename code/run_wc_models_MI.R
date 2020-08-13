@@ -108,30 +108,33 @@ df = data.frame(
   interaction = c(rep(FALSE,4),TRUE,rep(FALSE,4))
 )
 saveRDS(df, "output/wc/models_MI.RDS")
-
+  
+# make spde
+spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250)
+  
 # run models for each combination of settings/covariates in df ------------
 for(i in 1:nrow(df)) {
-
-  sub <- dat
-  # rename variables to make code generic
-  sub = dplyr::rename(sub, enviro = as.character(df$covariate[i]))
   
-  # make spde
-  spde <- try(make_spde(x = sub$longitude, y = sub$latitude, 
-    n_knots = 250), silent=TRUE)
-  if(class(spde) != "try-error") {
-    formula = paste0("cpue_kg_km2 ~ -1")
-    
-    time_formula = "~ -1"
-    if(df$time_varying[i]==TRUE) {
-      time_formula = paste0(time_formula, " + ", "enviro")
-      time_varying = as.formula(time_formula)
-      time = "year"
+  # rename variables to make code generic
+  sub <- dplyr::rename(dat, enviro1 = as.character(df$covariate1[i]))
+  
+  # format data and formula based on combination of arguements in df
+  formula = paste0("cpue_kg_km2 ~ -1")
+  time_formula = "~ -1"
+  time_varying = NULL
+  time = "year"
+  
+  if(df$covariate2[i] != "none") {
+    sub <- dplyr::rename(sub, enviro2 = as.character(df$covariate2[i]))
+    if(df$interaction[i] == TRUE){
+      formula = paste0(formula, " + ", "enviro1", " + ", "enviro2", " + ", "enviro1", " * ", "enviro2")
     } else {
-      formula = paste0(formula, " + ", "enviro")
-      time_varying = NULL
-      time = "year"
+      formula = paste0(formula, " + ", "enviro1", " + ", "enviro2")
     }
+  } else {
+    formula = paste0(formula, " + ", "enviro1")
+  }
+  
     formula = paste0(formula, " + as.factor(year)")
     
     if(df$depth_effect[i]==TRUE) {
@@ -139,9 +142,9 @@ for(i in 1:nrow(df)) {
     }
     
     # fit model
-    m <- try(sdmTMB(
+    if(df$threshold_parameter[i] != "none"){
+      m <- try(sdmTMB(
       formula = as.formula(formula),
-      time_varying = time_varying,
       spde = spde,
       time = time,
       family = tweedie(link = "log"),
@@ -151,11 +154,20 @@ for(i in 1:nrow(df)) {
       threshold_parameter = df$threshold_parameter[i],
       threshold_function = df$threshold_function[i],
     ), silent=TRUE)
+    } else {
+      m <- try(sdmTMB(
+        formula = as.formula(formula),
+        spde = spde,
+        time = time,
+        family = tweedie(link = "log"),
+        data = sub,
+        anisotropy = TRUE,
+        spatial_only = df$spatial_only[i],
+      ), silent=TRUE)
+    }
     
     if(class(m)!="try-error") {
       saveRDS(m, file=paste0("output/wc/model_",i,"_MI.rds"))
       #sd_report <- summary(m$sd_report)
     }
-  } # end try on spde
-  
 }
