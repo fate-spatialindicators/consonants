@@ -73,21 +73,10 @@ N = -0.208 # borrowed from cod
 
 dat$mi = B^N*Ao*dat$po2/exp(-1*Eo/(boltz*(dat$temp+kelvin)))
 
-# print 2015 summary statistics for metabolic index to check above computations
-# mi_2015 = dat %>% filter(year == 2015) %>% select(mi)
-# summary(mi_2015)
-# Min.   :0.08032  
-# 1st Qu.:1.38471  
-# Median :3.84666  
-# Mean   :3.50818  
-# 3rd Qu.:5.27474  
-# Max.   :9.71583 
-
 # prepare data and models -------------------------------------------------
 
 dat <- select(dat, species, year, longitude_dd, latitude_dd, cpue_kg_km2,
               o2, temp, depth, mi)
-#write.csv(dat, file = "output/wc/dat_wc_mi_B10000.csv")
 
 # rescale variables
 dat$depth = scale(log(dat$depth))
