@@ -172,6 +172,8 @@ for(i in 1:nrow(df)) {
           family = tweedie(link = "log"),
           data = sub,
           anisotropy = TRUE,
+          x = "latitude",
+          y = "longitude",
           spatial_only = df$spatial_only[i],
         ), silent=FALSE)
       }
