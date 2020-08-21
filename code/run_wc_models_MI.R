@@ -125,7 +125,7 @@ spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250)
   
 # run models for each combination of settings/covariates in df ------------
 
-use_cv = TRUE # specify whether to do cross validation or not
+use_cv = FALSE # specify whether to do cross validation or not
 tweedie_dens = rep(NA, nrow(df)) # set up vector to store performance data if using cv
 
 for(i in 1:nrow(df)) {
@@ -156,7 +156,7 @@ for(i in 1:nrow(df)) {
       formula = paste0(formula, " + depth + I(depth^2)")
     }
     
-    # fit model with or without cross validation
+    # fit model with or without cross-validation
     if(use_cv==TRUE) {
     
     if(df$threshold[i] == TRUE){
