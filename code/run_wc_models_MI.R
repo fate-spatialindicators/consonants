@@ -68,15 +68,26 @@ dat$po2 = dat$o2_umolkg/dat$sol_Dep
 # species-specific parameters
 Ao = 1.16625e-13
 Eo = 0.8736
-B = 3000 # size, roughly average
+B = 3000 # size in grams, roughly average (initial calculations used 10000g)
 N = -0.208 # borrowed from cod 
 
 dat$mi = B^N*Ao*dat$po2/exp(-1*Eo/(boltz*(dat$temp+kelvin)))
+
+# print 2015 summary statistics for metabolic index to check above computations
+# mi_2015 = dat %>% filter(year == 2015) %>% select(mi)
+# summary(mi_2015)
+# Min.   :0.08032  
+# 1st Qu.:1.38471  
+# Median :3.84666  
+# Mean   :3.50818  
+# 3rd Qu.:5.27474  
+# Max.   :9.71583 
 
 # prepare data and models -------------------------------------------------
 
 dat <- select(dat, species, year, longitude_dd, latitude_dd, cpue_kg_km2,
               o2, temp, depth, mi)
+#write.csv(dat, file = "output/wc/dat_wc_mi_B10000.csv")
 
 # rescale variables
 dat$depth = scale(log(dat$depth))
@@ -113,6 +124,10 @@ saveRDS(df, "output/wc/models_MI.RDS")
 spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250)
   
 # run models for each combination of settings/covariates in df ------------
+
+use_cv = TRUE # specify whether to do cross validation or not
+tweedie_dens = rep(NA, nrow(df)) # set up vector to store performance data if using cv
+
 for(i in 1:nrow(df)) {
   
   # rename variables to make code generic
@@ -141,7 +156,44 @@ for(i in 1:nrow(df)) {
       formula = paste0(formula, " + depth + I(depth^2)")
     }
     
-    # fit model
+    # fit model with or without cross validation
+    if(use_cv==TRUE) {
+    
+    if(df$threshold[i] == TRUE){
+      m <- try(sdmTMB_cv(
+        formula = as.formula(formula),
+        time = time,
+        k_folds = 10,
+        n_knots = 250,
+        seed = 45,
+        family = tweedie(link = "log"),
+        data = sub,
+        anisotropy = TRUE,
+        spatial_only = df$spatial_only[i],
+        threshold_parameter = df$enviro1,
+        threshold_function = df$threshold_function[i],
+      ), silent=FALSE)
+    } else {
+      m <- try(sdmTMB_cv(
+        formula = as.formula(formula),
+        time = time,
+        k_folds = 10,
+        n_knots = 250,
+        seed = 45,
+        family = tweedie(link = "log"),
+        data = sub,
+        anisotropy = TRUE,
+        spatial_only = df$spatial_only[i],
+      ), silent=FALSE)
+    }
+      if(class(m)!="try-error") {
+        saveRDS(m, file=paste0("output/wc/model_",i,"_MI_cv.rds"))
+        tweedie_dens[i] = m$sum_loglik
+        saveRDS(tweedie_dens, file = paste0("output/wc/tweedie_density_",i,"_MI_cv.rds"))
+      }
+    
+    } else {
+      
     if(df$threshold[i] == TRUE){
       m <- try(sdmTMB(
       formula = as.formula(formula),
@@ -165,9 +217,8 @@ for(i in 1:nrow(df)) {
         spatial_only = df$spatial_only[i],
       ), silent=FALSE)
     }
-    
     if(class(m)!="try-error") {
       saveRDS(m, file=paste0("output/wc/model_",i,"_MI.rds"))
-      #sd_report <- summary(m$sd_report)
     }
+  }
 }
