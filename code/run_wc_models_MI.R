@@ -101,8 +101,7 @@ df = data.frame(
   spatial_only = rep(FALSE,9), 
   depth_effect = rep(FALSE,9),
   time_varying = rep(FALSE,9),
-  threshold = c(rep(FALSE,5),rep(TRUE,4)),
-  threshold_function = c(rep("linear",5),rep(c("linear","logistic"),2)),
+  threshold_function = c(rep("NA",5),rep(c("linear","logistic"),2)),
   covariate1 = c("temp","o2","mi","temp","temp",rep("o2",2),rep("mi",2)),
   covariate2 = c(rep("none",3),"o2","o2",rep("none",4)),
   interaction = c(rep(FALSE,4),TRUE,rep(FALSE,4)),
@@ -115,6 +114,7 @@ use_cv = TRUE # specify whether to do cross validation or not
 spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose # knots
 
 for(i in 1:nrow(df)) {
+  print(paste0("model # ", i, " of ", nrow(df)))
   
   # rename variables to make code generic
   sub <- dplyr::rename(dat, enviro1 = as.character(df$covariate1[i]))
@@ -133,7 +133,14 @@ for(i in 1:nrow(df)) {
       formula = paste0(formula, " + ", "enviro1", " + ", "enviro2")
     }
   } else {
-    formula = paste0(formula, " + ", "enviro1")
+    if(df$threshold_function[i] == "linear") {
+      formula = paste0(formula, " + ", "breakpt(enviro1)")
+    }
+    if(df$threshold_function[i] == "logistic") {
+      formula = paste0(formula, " + ", "logistic(enviro1)")
+    } else {
+      formula = paste0(formula, " + ", "enviro1")
+    }
   }
   
   formula = paste0(formula, " + as.factor(year)")
@@ -144,69 +151,40 @@ for(i in 1:nrow(df)) {
     
     # fit model with or without cross-validation
     if(use_cv==TRUE) {
-    
-      if(df$threshold[i] == TRUE){
-        m <- try(sdmTMB_cv(
-          formula = as.formula(formula),
-          data = sub,
-          x = "longitude", 
-          y = "latitude",
-          time = time,
-          k_folds = 10,
-          n_knots = 250,
-          seed = 45,
-          family = tweedie(link = "log"),
-          anisotropy = TRUE,
-          spatial_only = df$spatial_only[i]
-        ), silent=FALSE)
-      } else {
-        m <- try(sdmTMB_cv(
-          formula = as.formula(formula),
-          data = sub,
-          x = "longitude", 
-          y = "latitude",
-          time = time,
-          k_folds = 10,
-          n_knots = 250,
-          seed = 45,
-          family = tweedie(link = "log"),
-          anisotropy = TRUE,
-          spatial_only = df$spatial_only[i]
-        ), silent=FALSE)
-      }
-        if(class(m)!="try-error") {
-          saveRDS(m, file=paste0("output/wc/model_",i,"_MI_cv.rds"))
-          df$tweedie_dens[i] = m$sum_loglik
-        }
-    
-    } else {
-      
-      if(df$threshold[i] == TRUE){
-        m <- try(sdmTMB(
+      m <- try(sdmTMB_cv(
         formula = as.formula(formula),
-        spde = spde,
-        time = time,
-        family = tweedie(link = "log"),
         data = sub,
+        x = "longitude", 
+        y = "latitude",
+        time = time,
+        k_folds = 5,
+        n_knots = 250,
+        seed = 45,
+        family = tweedie(link = "log"),
         anisotropy = TRUE,
-        spatial_only = df$spatial_only[i],
-        threshold_parameter = df$enviro1,
-        threshold_function = df$threshold_function[i],
+        spatial_only = df$spatial_only[i]
       ), silent=FALSE)
-      } else {
+      
+      if(class(m)!="try-error") {
+        saveRDS(m, file=paste0("output/wc/model_",i,"_MI_cv.rds"))
+        df$tweedie_dens[i] = m$sum_loglik
+      }
+      
+    } else {
         m <- try(sdmTMB(
           formula = as.formula(formula),
-          spde = spde,
-          time = time,
-          family = tweedie(link = "log"),
           data = sub,
+          time = time,
+          spde = spde,
+          family = tweedie(link = "log"),
           anisotropy = TRUE,
-          spatial_only = df$spatial_only[i],
+          spatial_only = df$spatial_only[i]
         ), silent=FALSE)
-      }
+        
       if(class(m)!="try-error") {
         saveRDS(m, file=paste0("output/wc/model_",i,"_MI.rds"))
       }
+        
     }
 }
 
