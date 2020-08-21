@@ -1,4 +1,4 @@
-devtools::install_github("pbs-assess/sdmTMB", ref = "threshold")
+devtools::install_github("pbs-assess/sdmTMB")
 library(sdmTMB)
 library(dplyr)
 library(sp)
@@ -150,64 +150,52 @@ for(i in 1:nrow(df)) {
     formula = paste0(formula, " + ", "enviro1")
   }
   
-    formula = paste0(formula, " + as.factor(year)")
-    
-    if(df$depth_effect[i]==TRUE) {
-      formula = paste0(formula, " + depth + I(depth^2)")
-    }
+  formula = paste0(formula, " + as.factor(year)")
+  
+  if(df$depth_effect[i]==TRUE) {
+    formula = paste0(formula, " + depth + I(depth^2)")
+  }
     
     # fit model with or without cross-validation
     if(use_cv==TRUE) {
     
-    if(df$threshold[i] == TRUE){
-      m <- try(sdmTMB_cv(
-        formula = as.formula(formula),
-        time = time,
-        k_folds = 10,
-        n_knots = 250,
-        seed = 45,
-        family = tweedie(link = "log"),
-        data = sub,
-        anisotropy = TRUE,
-        spatial_only = df$spatial_only[i],
-        threshold_parameter = df$enviro1,
-        threshold_function = df$threshold_function[i],
-      ), silent=FALSE)
-    } else {
-      m <- try(sdmTMB_cv(
-        formula = as.formula(formula),
-        time = time,
-        k_folds = 10,
-        n_knots = 250,
-        seed = 45,
-        family = tweedie(link = "log"),
-        data = sub,
-        anisotropy = TRUE,
-        spatial_only = df$spatial_only[i],
-      ), silent=FALSE)
-    }
-      if(class(m)!="try-error") {
-        saveRDS(m, file=paste0("output/wc/model_",i,"_MI_cv.rds"))
-        tweedie_dens[i] = m$sum_loglik
-        saveRDS(tweedie_dens, file = paste0("output/wc/tweedie_density_",i,"_MI_cv.rds"))
+      if(df$threshold[i] == TRUE){
+        m <- try(sdmTMB_cv(
+          formula = as.formula(formula),
+          time = time,
+          k_folds = 10,
+          n_knots = 250,
+          seed = 45,
+          family = tweedie(link = "log"),
+          data = sub,
+          anisotropy = TRUE,
+          spatial_only = df$spatial_only[i],
+          threshold_parameter = df$enviro1,
+          threshold_function = df$threshold_function[i],
+        ), silent=FALSE)
+      } else {
+        m <- try(sdmTMB_cv(
+          formula = as.formula(formula),
+          time = time,
+          k_folds = 10,
+          n_knots = 250,
+          seed = 45,
+          family = tweedie(link = "log"),
+          data = sub,
+          anisotropy = TRUE,
+          spatial_only = df$spatial_only[i],
+        ), silent=FALSE)
       }
+        if(class(m)!="try-error") {
+          saveRDS(m, file=paste0("output/wc/model_",i,"_MI_cv.rds"))
+          tweedie_dens[i] = m$sum_loglik
+          saveRDS(tweedie_dens, file = paste0("output/wc/tweedie_density_",i,"_MI_cv.rds"))
+        }
     
     } else {
       
-    if(df$threshold[i] == TRUE){
-      m <- try(sdmTMB(
-      formula = as.formula(formula),
-      spde = spde,
-      time = time,
-      family = tweedie(link = "log"),
-      data = sub,
-      anisotropy = TRUE,
-      spatial_only = df$spatial_only[i],
-      threshold_parameter = df$enviro1,
-      threshold_function = df$threshold_function[i],
-    ), silent=FALSE)
-    } else {
-      m <- try(sdmTMB(
+      if(df$threshold[i] == TRUE){
+        m <- try(sdmTMB(
         formula = as.formula(formula),
         spde = spde,
         time = time,
@@ -215,10 +203,22 @@ for(i in 1:nrow(df)) {
         data = sub,
         anisotropy = TRUE,
         spatial_only = df$spatial_only[i],
+        threshold_parameter = df$enviro1,
+        threshold_function = df$threshold_function[i],
       ), silent=FALSE)
+      } else {
+        m <- try(sdmTMB(
+          formula = as.formula(formula),
+          spde = spde,
+          time = time,
+          family = tweedie(link = "log"),
+          data = sub,
+          anisotropy = TRUE,
+          spatial_only = df$spatial_only[i],
+        ), silent=FALSE)
+      }
+      if(class(m)!="try-error") {
+        saveRDS(m, file=paste0("output/wc/model_",i,"_MI.rds"))
+      }
     }
-    if(class(m)!="try-error") {
-      saveRDS(m, file=paste0("output/wc/model_",i,"_MI.rds"))
-    }
-  }
 }
