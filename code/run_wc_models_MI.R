@@ -105,17 +105,14 @@ df = data.frame(
   threshold_function = c(rep("linear",5),rep(c("linear","logistic"),2)),
   covariate1 = c("temp","o2","mi","temp","temp",rep("o2",2),rep("mi",2)),
   covariate2 = c(rep("none",3),"o2","o2",rep("none",4)),
-  interaction = c(rep(FALSE,4),TRUE,rep(FALSE,4))
+  interaction = c(rep(FALSE,4),TRUE,rep(FALSE,4)),
+  tweedie_dens = rep(NA,9) # set up vector to store performance data if using cv
 )
-saveRDS(df, "output/wc/models_MI.RDS")
-  
-# make spde
-spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250)
   
 # run models for each combination of settings/covariates in df ------------
 
-use_cv = FALSE # specify whether to do cross validation or not
-tweedie_dens = rep(NA, nrow(df)) # set up vector to store performance data if using cv
+use_cv = TRUE # specify whether to do cross validation or not
+spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose # knots
 
 for(i in 1:nrow(df)) {
   
@@ -151,34 +148,35 @@ for(i in 1:nrow(df)) {
       if(df$threshold[i] == TRUE){
         m <- try(sdmTMB_cv(
           formula = as.formula(formula),
+          data = sub,
+          x = "longitude", 
+          y = "latitude",
           time = time,
           k_folds = 10,
           n_knots = 250,
           seed = 45,
           family = tweedie(link = "log"),
-          data = sub,
           anisotropy = TRUE,
-          spatial_only = df$spatial_only[i],
-          threshold_parameter = df$enviro1,
-          threshold_function = df$threshold_function[i],
+          spatial_only = df$spatial_only[i]
         ), silent=FALSE)
       } else {
         m <- try(sdmTMB_cv(
           formula = as.formula(formula),
+          data = sub,
+          x = "longitude", 
+          y = "latitude",
           time = time,
           k_folds = 10,
           n_knots = 250,
           seed = 45,
           family = tweedie(link = "log"),
-          data = sub,
           anisotropy = TRUE,
-          spatial_only = df$spatial_only[i],
+          spatial_only = df$spatial_only[i]
         ), silent=FALSE)
       }
         if(class(m)!="try-error") {
           saveRDS(m, file=paste0("output/wc/model_",i,"_MI_cv.rds"))
-          tweedie_dens[i] = m$sum_loglik
-          saveRDS(tweedie_dens, file = paste0("output/wc/tweedie_density_",i,"_MI_cv.rds"))
+          df$tweedie_dens[i] = m$sum_loglik
         }
     
     } else {
@@ -211,3 +209,5 @@ for(i in 1:nrow(df)) {
       }
     }
 }
+
+saveRDS(df, "output/wc/models_MI.RDS")
