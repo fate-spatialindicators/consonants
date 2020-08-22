@@ -110,7 +110,7 @@ df = data.frame(
   
 # run models for each combination of settings/covariates in df ------------
 
-use_cv = TRUE # specify whether to do cross validation or not
+use_cv = FALSE # specify whether to do cross validation or not
 spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose # knots
 
 for(i in 1:nrow(df)) {
@@ -119,8 +119,8 @@ for(i in 1:nrow(df)) {
   # rename variables to make code generic
   sub <- dplyr::rename(dat, enviro1 = as.character(df$covariate1[i]))
   
-  # format data and formula based on combination of arguements in df
-  formula = paste0("cpue_kg_km2 ~ -1")
+  # format data and formula based on combination of arguements in model settings df
+  formula = paste0("cpue_kg_km2 ~ -1 + as.factor(year)")
   time_formula = "~ -1"
   time_varying = NULL
   time = "year"
@@ -143,8 +143,6 @@ for(i in 1:nrow(df)) {
     }
   }
   
-  formula = paste0(formula, " + as.factor(year)")
-  
   if(df$depth_effect[i]==TRUE) {
     formula = paste0(formula, " + depth + I(depth^2)")
   }
@@ -159,14 +157,14 @@ for(i in 1:nrow(df)) {
         time = time,
         k_folds = 5,
         n_knots = 250,
-        seed = 45,
+        seed = 7,
         family = tweedie(link = "log"),
         anisotropy = TRUE,
         spatial_only = df$spatial_only[i]
-      ), silent=FALSE)
+      ), silent = FALSE)
       
       if(class(m)!="try-error") {
-        saveRDS(m, file=paste0("output/wc/model_",i,"_MI_cv.rds"))
+        saveRDS(m, file = paste0("output/wc/model_",i,"_MI_cv.rds"))
         df$tweedie_dens[i] = m$sum_loglik
       }
       
@@ -179,13 +177,16 @@ for(i in 1:nrow(df)) {
           family = tweedie(link = "log"),
           anisotropy = TRUE,
           spatial_only = df$spatial_only[i]
-        ), silent=FALSE)
+        ), silent = FALSE)
         
       if(class(m)!="try-error") {
-        saveRDS(m, file=paste0("output/wc/model_",i,"_MI.rds"))
+        saveRDS(m, file = paste0("output/wc/model_",i,"_MI.rds"))
       }
         
     }
 }
 
-saveRDS(df, "output/wc/models_MI.RDS")
+saveRDS(df, "output/wc/models_MI.rds")
+
+#as.list(m$sd_report, "Estimate")$b_threshold
+#as.list(m$sd_report, "Std. Error")$b_threshold
