@@ -98,14 +98,14 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
 
 # create combination of covariates and threshold responses for different models
 m_df = data.frame(
-  spatial_only = rep(FALSE,9), 
-  depth_effect = rep(FALSE,9),
-  time_varying = rep(FALSE,9),
-  threshold_function = c(rep("NA",5),rep(c("linear","logistic"),2)),
-  covariate1 = c("temp","o2","mi","temp","temp",rep("o2",2),rep("mi",2)),
-  covariate2 = c(rep("none",3),"o2","o2",rep("none",4)),
-  interaction = c(rep(FALSE,4),TRUE,rep(FALSE,4)),
-  tweedie_dens = rep(NA,9) # set up vector to store performance data if using cv
+  spatial_only = rep(FALSE,11), 
+  depth_effect = rep(FALSE,11),
+  time_varying = rep(FALSE,11),
+  threshold_function = c(rep("NA",5),c("linear","logistic","linear"),rep("quadatic",3)),
+  covariate1 = c("temp","o2","mi","temp","temp",rep("o2",2),rep("mi",2),"temp","o2"),
+  covariate2 = c(rep("none",3),"o2","o2",rep("none",6)),
+  interaction = c(rep(FALSE,4),TRUE,rep(FALSE,6)),
+  tweedie_dens = rep(NA,11) # set up vector to store performance data if using cv
 )
   
 # run models for each combination of settings/covariates in df ------------
@@ -113,7 +113,7 @@ m_df = data.frame(
 use_cv = FALSE # specify whether to do cross validation or not
 spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose # knots
 
-for(i in 1:nrow(df)) {
+for(i in 1:nrow(m_df)) {
   print(paste0("model # ", i, " of ", nrow(m_df)))
   
   # rename variables to make code generic
@@ -139,7 +139,12 @@ for(i in 1:nrow(df)) {
     if(m_df$threshold_function[i] == "logistic") {
       formula = paste0(formula, " + ", "logistic(enviro1)")
     } 
-    if(m_df$threshold_function[i] == "NA")  formula = paste0(formula, " + ", "enviro1")
+    if(m_df$threshold_function[i] == "quadratic") {
+      formula = paste0(formula, " + ", "I(enviro1^2)")
+    }
+    if(m_df$threshold_function[i] == "NA") {
+      formula = paste0(formula, " + ", "enviro1")
+    }
   }
   
   if(m_df$depth_effect[i]==TRUE) {
