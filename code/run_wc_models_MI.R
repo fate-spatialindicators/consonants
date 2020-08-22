@@ -97,7 +97,7 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
   latitude = latitude_dd)
 
 # create combination of covariates and threshold responses for different models
-df = data.frame(
+m_df = data.frame(
   spatial_only = rep(FALSE,9), 
   depth_effect = rep(FALSE,9),
   time_varying = rep(FALSE,9),
@@ -114,36 +114,35 @@ use_cv = FALSE # specify whether to do cross validation or not
 spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose # knots
 
 for(i in 1:nrow(df)) {
-  print(paste0("model # ", i, " of ", nrow(df)))
+  print(paste0("model # ", i, " of ", nrow(m_df)))
   
   # rename variables to make code generic
-  sub <- dplyr::rename(dat, enviro1 = as.character(df$covariate1[i]))
+  sub <- dplyr::rename(dat, enviro1 = as.character(m_df$covariate1[i]))
   
   # format data and formula based on combination of arguements in model settings df
-  formula = paste0("cpue_kg_km2 ~ -1 + as.factor(year)")
+  formula = paste0("cpue_kg_km2 ~ 0 + as.factor(year)")
   time_formula = "~ -1"
   time_varying = NULL
   time = "year"
   
-  if(df$covariate2[i] != "none") {
-    sub <- dplyr::rename(sub, enviro2 = as.character(df$covariate2[i]))
-    if(df$interaction[i] == TRUE){
+  if(m_df$covariate2[i] != "none") {
+    sub <- dplyr::rename(sub, enviro2 = as.character(m_df$covariate2[i]))
+    if(m_df$interaction[i] == TRUE){
       formula = paste0(formula, " + ", "enviro1", " + ", "enviro2", " + ", "enviro1", " * ", "enviro2")
     } else {
       formula = paste0(formula, " + ", "enviro1", " + ", "enviro2")
     }
   } else {
-    if(df$threshold_function[i] == "linear") {
+    if(m_df$threshold_function[i] == "linear") {
       formula = paste0(formula, " + ", "breakpt(enviro1)")
     }
-    if(df$threshold_function[i] == "logistic") {
+    if(m_df$threshold_function[i] == "logistic") {
       formula = paste0(formula, " + ", "logistic(enviro1)")
-    } else {
-      formula = paste0(formula, " + ", "enviro1")
-    }
+    } 
+    if(m_df$threshold_function[i] == "NA")  formula = paste0(formula, " + ", "enviro1")
   }
   
-  if(df$depth_effect[i]==TRUE) {
+  if(m_df$depth_effect[i]==TRUE) {
     formula = paste0(formula, " + depth + I(depth^2)")
   }
     
@@ -160,12 +159,12 @@ for(i in 1:nrow(df)) {
         seed = 7,
         family = tweedie(link = "log"),
         anisotropy = TRUE,
-        spatial_only = df$spatial_only[i]
+        spatial_only = m_df$spatial_only[i]
       ), silent = FALSE)
       
       if(class(m)!="try-error") {
         saveRDS(m, file = paste0("output/wc/model_",i,"_MI_cv.rds"))
-        df$tweedie_dens[i] = m$sum_loglik
+        m_df$tweedie_dens[i] = m$sum_loglik
       }
       
     } else {
@@ -176,7 +175,7 @@ for(i in 1:nrow(df)) {
           spde = spde,
           family = tweedie(link = "log"),
           anisotropy = TRUE,
-          spatial_only = df$spatial_only[i]
+          spatial_only = m_df$spatial_only[i]
         ), silent = FALSE)
         
       if(class(m)!="try-error") {
@@ -186,7 +185,7 @@ for(i in 1:nrow(df)) {
     }
 }
 
-saveRDS(df, "output/wc/models_MI.rds")
+saveRDS(m_df, "output/wc/models_MI.rds")
 
 #as.list(m$sd_report, "Estimate")$b_threshold
 #as.list(m$sd_report, "Std. Error")$b_threshold
