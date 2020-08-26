@@ -101,7 +101,7 @@ m_df = data.frame(
   spatial_only = rep(FALSE,11), 
   depth_effect = rep(FALSE,11),
   time_varying = rep(FALSE,11),
-  threshold_function = c(rep("NA",5),c("linear","logistic","linear"),rep("quadatic",3)),
+  threshold_function = c(rep("NA",5),c("linear","logistic","linear"),rep("quadratic",3)),
   covariate1 = c("temp","o2","mi","temp","temp",rep("o2",2),rep("mi",2),"temp","o2"),
   covariate2 = c(rep("none",3),"o2","o2",rep("none",6)),
   interaction = c(rep(FALSE,4),TRUE,rep(FALSE,6)),
@@ -110,7 +110,7 @@ m_df = data.frame(
   
 # run models for each combination of settings/covariates in df ------------
 
-use_cv = FALSE # specify whether to do cross validation or not
+use_cv = TRUE # specify whether to do cross validation or not
 spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose # knots
 
 for(i in 1:nrow(m_df)) {
