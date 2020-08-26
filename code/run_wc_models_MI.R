@@ -111,9 +111,47 @@ m_df = data.frame(
   
 # run models for each combination of settings/covariates in df ------------
 
-use_cv = TRUE # specify whether to do cross validation or not
+use_cv = FALSE # specify whether to do cross validation or not
 spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose # knots
 
+# fit fixed effects with splines as in mgcv to detect functional form
+m_gam_temp <- sdmTMB(formula = cpue_kg_km2 ~ 0 + as.factor(year) + s(temp, k = 5),
+  data = dat,
+  time = "year",
+  spde = spde,
+  family = tweedie(link = "log"),
+  anisotropy = TRUE)
+m_gam_o2 <- sdmTMB(
+  formula = cpue_kg_km2 ~ 0 + as.factor(year) + s(o2, k = 5),
+  data = dat,
+  time = "year",
+  spde = spde,
+  family = tweedie(link = "log"),
+  anisotropy = TRUE)
+m_gam_mi <- sdmTMB(
+  formula = cpue_kg_km2 ~ 0 + as.factor(year) + s(mi, k = 5),
+  data = dat,
+  time = "year",
+  spde = spde,
+  family = tweedie(link = "log"),
+  anisotropy = TRUE)
+
+nd_temp <- data.frame(temp = seq(min(dat$temp), max(dat$temp), length.out = 100), year = 2013L)
+nd_o2 <- data.frame(o2 = seq(min(dat$o2), max(dat$o2), length.out = 100), year = 2013L)
+nd_mi <- data.frame(mi = seq(min(dat$mi), max(dat$mi), length.out = 100), year = 2013L)
+
+p_temp <- predict(m_gam_temp, newdata = nd_temp, se_fit = TRUE, re_form = NA)
+p_o2 <- predict(m_gam_o2, newdata = nd_o2, se_fit = TRUE, re_form = NA)
+p_mi <- predict(m_gam_mi, newdata = nd_mi, se_fit = TRUE, re_form = NA)
+
+ggplot(p_temp, aes(temp, exp(est), ymin = exp(est - 1.96 * est_se), ymax = exp(est + 1.96 * est_se))) +
+  geom_line() + geom_ribbon(alpha = 0.4)
+ggplot(p_o2, aes(o2, exp(est), ymin = exp(est - 1.96 * est_se), ymax = exp(est + 1.96 * est_se))) +
+  geom_line() + geom_ribbon(alpha = 0.4)
+ggplot(p_mi, aes(mi, exp(est), ymin = exp(est - 1.96 * est_se), ymax = exp(est + 1.96 * est_se))) +
+  geom_line() + geom_ribbon(alpha = 0.4)
+
+# fit models with typical approach
 for(i in 1:nrow(m_df)) {
   print(paste0("model # ", i, " of ", nrow(m_df)))
   
@@ -160,9 +198,9 @@ for(i in 1:nrow(m_df)) {
         x = "longitude", 
         y = "latitude",
         time = time,
-        k_folds = 5,
+        k_folds = 4,
         n_knots = 250,
-        seed = 7,
+        seed = 10,
         family = tweedie(link = "log"),
         anisotropy = TRUE,
         spatial_only = m_df$spatial_only[i]
@@ -191,7 +229,7 @@ for(i in 1:nrow(m_df)) {
     }
 }
 
-saveRDS(m_df, "output/wc/models_MI.rds")
+#saveRDS(m_df, "output/wc/models_MI.rds")
 
 #as.list(m$sd_report, "Estimate")$b_threshold
 #as.list(m$sd_report, "Std. Error")$b_threshold
