@@ -97,6 +97,7 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
   latitude = latitude_dd)
 
 # create combination of covariates and threshold responses for different models
+# (quadratic is modeled by data transformation, but included as a "threshold" type for convenience)
 m_df = data.frame(
   spatial_only = rep(FALSE,11), 
   depth_effect = rep(FALSE,11),
@@ -119,7 +120,7 @@ for(i in 1:nrow(m_df)) {
   # rename variables to make code generic
   sub <- dplyr::rename(dat, enviro1 = as.character(m_df$covariate1[i]))
   
-  # format data and formula based on combination of arguements in model settings df
+  # format data and formula based on combination of arguments in model settings df
   formula = paste0("cpue_kg_km2 ~ 0 + as.factor(year)")
   time_formula = "~ -1"
   time_varying = NULL
