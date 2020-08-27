@@ -136,9 +136,9 @@ m_gam_mi <- sdmTMB(
   family = tweedie(link = "log"),
   anisotropy = TRUE)
 
-nd_temp <- data.frame(temp = seq(min(dat$temp), max(dat$temp), length.out = 100), year = 2013L)
-nd_o2 <- data.frame(o2 = seq(min(dat$o2), max(dat$o2), length.out = 100), year = 2013L)
-nd_mi <- data.frame(mi = seq(min(dat$mi), max(dat$mi), length.out = 100), year = 2013L)
+nd_temp <- data.frame(temp = seq(min(dat$temp), max(dat$temp), length.out = 100), year = 2010L)
+nd_o2 <- data.frame(o2 = seq(min(dat$o2), max(dat$o2), length.out = 100), year = 2010L)
+nd_mi <- data.frame(mi = seq(min(dat$mi), max(dat$mi), length.out = 100), year = 2010L)
 
 p_temp <- predict(m_gam_temp, newdata = nd_temp, se_fit = TRUE, re_form = NA)
 p_o2 <- predict(m_gam_o2, newdata = nd_o2, se_fit = TRUE, re_form = NA)
@@ -204,7 +204,7 @@ for(i in 1:nrow(m_df)) {
         family = tweedie(link = "log"),
         anisotropy = TRUE,
         spatial_only = m_df$spatial_only[i]
-      ), silent = FALSE)
+      ), silent = TRUE)
       
       if(class(m)!="try-error") {
         saveRDS(m, file = paste0("output/wc/model_",i,"_MI_cv.rds"))
@@ -220,7 +220,7 @@ for(i in 1:nrow(m_df)) {
           family = tweedie(link = "log"),
           anisotropy = TRUE,
           spatial_only = m_df$spatial_only[i]
-        ), silent = FALSE)
+        ), silent = TRUE)
         
       if(class(m)!="try-error") {
         saveRDS(m, file = paste0("output/wc/model_",i,"_MI.rds"))
@@ -233,3 +233,30 @@ for(i in 1:nrow(m_df)) {
 
 #as.list(m$sd_report, "Estimate")$b_threshold
 #as.list(m$sd_report, "Std. Error")$b_threshold
+
+# a few plots
+# residuals
+m <- readRDS("output/wc/model_1_MI.rds") 
+predictions = predict(m)
+predictions$resids = residuals(m)
+plot_map <- function(dat, column = "est") {
+  ggplot(dat, aes_string("longitude", "latitude", fill = column)) +
+    geom_tile() +
+    facet_wrap(~year) +
+    coord_fixed()
+}
+ggplot(predictions, aes(longitude, latitude, col = resids)) + scale_colour_gradient2() +
+  geom_point(alpha=0.6) + facet_wrap(~year)
+# mi distribution
+ggplot(dat, aes(longitude, latitude, col = mi)) + scale_colour_gradient2() +
+  geom_point(alpha=0.6) + facet_wrap(~year)
+# o2 distribution
+ggplot(dat, aes(longitude, latitude, col = o2)) + scale_colour_gradient2() +
+  geom_point(alpha=0.6) + facet_wrap(~year)
+# temp distribution
+library(scales)
+ggplot(dat, aes(longitude, latitude, col = temp)) + scale_colour_gradient2(low=muted("blue"),high=muted("red")) +
+  geom_point(alpha=0.6) + facet_wrap(~year)
+# cpue distribution
+ggplot(dat, aes(longitude, latitude, col = sqrt(cpue_kg_km2))) + 
+  scale_colour_gradient(name = "density",low = "white",high="blue") + geom_point(alpha=0.8) + facet_wrap(~year)
