@@ -68,7 +68,7 @@ dat$po2 = dat$o2_umolkg/dat$sol_Dep
 # species-specific parameters
 Ao = 1.16625e-13
 Eo = 0.8736
-B = 3000 # size in grams, roughly average (initial calculations used 10000g)
+B = 1200 # size in grams, roughly average (initial calculations used 10kg then 3kg)
 N = -0.208 # borrowed from cod 
 
 dat$mi = B^N*Ao*dat$po2/exp(-1*Eo/(boltz*(dat$temp+kelvin)))
