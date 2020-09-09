@@ -99,8 +99,8 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
 # create combination of covariates and threshold responses for different models
 # (quadratic is modeled by data transformation, but included as a "threshold" type for convenience)
 m_df = data.frame(
-  spatial_only = rep(FALSE,11), 
-  depth_effect = rep(FALSE,11),
+  spatial_only = rep(TRUE,11), 
+  depth_effect = rep(TRUE,11),
   time_varying = rep(FALSE,11),
   threshold_function = c(rep("NA",5),c("linear","logistic","linear"),rep("quadratic",3)),
   covariate1 = c("temp","o2","mi","temp","temp",rep("o2",2),rep("mi",2),"temp","o2"),
@@ -108,10 +108,10 @@ m_df = data.frame(
   interaction = c(rep(FALSE,4),TRUE,rep(FALSE,6)),
   tweedie_dens = rep(NA,11) # set up vector to store performance data if using cv
 )
-  
+
 # run models for each combination of settings/covariates in df ------------
 
-use_cv = FALSE # specify whether to do cross validation or not
+use_cv = TRUE # specify whether to do cross validation or not
 spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose # knots
 
 # fit fixed effects with splines as in mgcv to detect functional form
@@ -192,6 +192,8 @@ for(i in 1:nrow(m_df)) {
     
     # fit model with or without cross-validation
     if(use_cv==TRUE) {
+      time="year"
+      if(m_df$spatial_only[i]==TRUE) time=NULL
       m <- try(sdmTMB_cv(
         formula = as.formula(formula),
         data = sub,
