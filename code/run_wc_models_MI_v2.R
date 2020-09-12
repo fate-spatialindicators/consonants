@@ -38,7 +38,7 @@ gsw_O2sol_SP_pt <- function(sal,pt) {
   x = dat$sal
   pt68 = dat$pt*1.00024
   y = log((298.15 - pt68)/(273.15 + pt68))
-
+  
   a0 =  5.80871
   a1 =  3.20291
   a2 =  4.17887
@@ -100,11 +100,11 @@ coordinates(dat_ll) <- c("longitude_dd", "latitude_dd")
 proj4string(dat_ll) <- CRS("+proj=longlat +datum=WGS84")
 # convert to utm with spTransform
 dat_utm = spTransform(dat_ll, 
-  CRS("+proj=utm +zone=10 +datum=WGS84 +units=km"))
+                      CRS("+proj=utm +zone=10 +datum=WGS84 +units=km"))
 # convert back from sp object to data frame
 dat = as.data.frame(dat_utm)
 dat = dplyr::rename(dat, longitude = longitude_dd, 
-  latitude = latitude_dd)
+                    latitude = latitude_dd)
 
 # create combination of covariates and threshold responses for different models
 m_df = data.frame(
@@ -117,7 +117,7 @@ m_df = data.frame(
   interaction = c(rep(FALSE,5),TRUE, FALSE, TRUE, rep(FALSE,5)),
   tweedie_dens = rep(NA,13) # set up vector to store performance data if using cv
 )
-  
+
 # run models for each combination of settings/covariates in df ------------
 
 use_cv = FALSE # specify whether to do cross validation or not
@@ -161,45 +161,45 @@ for(i in 1:nrow(m_df)){
   if(m_df$depth_effect[i]==TRUE) {
     formula = paste0(formula, " + depth + I(depth^2)")
   }
+  
+  # fit model with or without cross-validation
+  if(use_cv==TRUE) {
+    m <- try(sdmTMB_cv(
+      formula = as.formula(formula),
+      data = sub,
+      x = "longitude", 
+      y = "latitude",
+      time = NULL,
+      k_folds = 4,
+      n_knots = 250,
+      seed = 10,
+      family = tweedie(link = "log"),
+      anisotropy = TRUE,
+      spatial_only = m_df$spatial_only[i]
+    ), silent = TRUE)
     
-    # fit model with or without cross-validation
-    if(use_cv==TRUE) {
-      m <- try(sdmTMB_cv(
-        formula = as.formula(formula),
-        data = sub,
-        x = "longitude", 
-        y = "latitude",
-        time = NULL,
-        k_folds = 4,
-        n_knots = 250,
-        seed = 10,
-        family = tweedie(link = "log"),
-        anisotropy = TRUE,
-        spatial_only = m_df$spatial_only[i]
-      ), silent = TRUE)
-      
-      if(class(m)!="try-error") {
-        saveRDS(m, file = paste0("output/wc/model_",i,"_MI_cv.rds"))
-        m_df$tweedie_dens[i] = m$sum_loglik
-      }
-      
-    } else {
-        m <- try(sdmTMB(
-          formula = as.formula(formula),
-          data = sub,
-          time = NULL,
-          reml = TRUE,
-          spde = spde,
-          family = tweedie(link = "log"),
-          anisotropy = TRUE,
-          spatial_only = m_df$spatial_only[i]
-        ), silent = TRUE)
-        
-      if(class(m)!="try-error") {
-        saveRDS(m, file = paste0("output/wc/model_",i,"_MI.rds"))
-      }
-        
+    if(class(m)!="try-error") {
+      saveRDS(m, file = paste0("output/wc/model_",i,"_MI_cv.rds"))
+      m_df$tweedie_dens[i] = m$sum_loglik
     }
+    
+  } else {
+    m <- try(sdmTMB(
+      formula = as.formula(formula),
+      data = sub,
+      time = NULL,
+      reml = TRUE,
+      spde = spde,
+      family = tweedie(link = "log"),
+      anisotropy = TRUE,
+      spatial_only = m_df$spatial_only[i]
+    ), silent = TRUE)
+    
+    if(class(m)!="try-error") {
+      saveRDS(m, file = paste0("output/wc/model_",i,"_MI.rds"))
+    }
+    
+  }
 }
 
 
@@ -224,20 +224,13 @@ for (i in 1:nrow(m_df)) {
   m <- readRDS(filename)
   AICmat[i,1] <-AIC(m)
 }
-  
+
 dAIC <- AICmat[,1] - min(AICmat[,1])
 dAIC <- matrix(as.numeric(sprintf(dAIC,fmt = '%.2f')), nrow = 13, ncol = 1)
-<<<<<<< HEAD
-rownames(dAIC) <- c("space + depth + year", 
-                    "space + depth + year + temp",
-                    "space + depth + year + o2",
-                    "space + depth + year + po2",
-=======
 rownames(dAIC) <- c("space + depth + year + temp", 
                     "space + depth + year + o2",
                     "space + depth + year + p02",
                     "space + depth + year + mi",
->>>>>>> 0db89897d3bd3fd4ff79b89bcfe650660220f78e
                     "space + depth + year+temp + o2",
                     "space + depth + year + temp:o2",
                     "space + depth + year+temp + po2",
@@ -249,12 +242,4 @@ rownames(dAIC) <- c("space + depth + year + temp",
                     "space + depth + year + mi(breakpoint)")
 dAIC
 
-<<<<<<< HEAD
-            
-=======
 dAIC = data.frame(model = rownames(dAIC), dAIC = dAIC)
-
-
->>>>>>> 0db89897d3bd3fd4ff79b89bcfe650660220f78e
-
-
