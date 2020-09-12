@@ -37,7 +37,7 @@ gsw_O2sol_SP_pt <- function(sal,pt) {
   x = dat$sal
   pt68 = dat$pt*1.00024
   y = log((298.15 - pt68)/(273.15 + pt68))
-
+  
   a0 =  5.80871
   a1 =  3.20291
   a2 =  4.17887
@@ -68,7 +68,7 @@ dat$po2 = dat$o2_umolkg/dat$sol_Dep
 # species-specific parameters
 Ao = 1.16625e-13
 Eo = 0.8736
-B = 3000 # size in grams, roughly average (initial calculations used 10000g)
+B = 1200 # size in grams, roughly average (initial calculations used 10kg then 3kg)
 N = -0.208 # borrowed from cod 
 
 dat$mi = B^N*Ao*dat$po2/exp(-1*Eo/(boltz*(dat$temp+kelvin)))
@@ -90,17 +90,17 @@ coordinates(dat_ll) <- c("longitude_dd", "latitude_dd")
 proj4string(dat_ll) <- CRS("+proj=longlat +datum=WGS84")
 # convert to utm with spTransform
 dat_utm = spTransform(dat_ll, 
-  CRS("+proj=utm +zone=10 +datum=WGS84 +units=km"))
+                      CRS("+proj=utm +zone=10 +datum=WGS84 +units=km"))
 # convert back from sp object to data frame
 dat = as.data.frame(dat_utm)
 dat = dplyr::rename(dat, longitude = longitude_dd, 
-  latitude = latitude_dd)
+                    latitude = latitude_dd)
 
 # create combination of covariates and threshold responses for different models
 # (quadratic is modeled by data transformation, but included as a "threshold" type for convenience)
 m_df = data.frame(
-  spatial_only = rep(FALSE,11), 
-  depth_effect = rep(FALSE,11),
+  spatial_only = rep(TRUE,11), 
+  depth_effect = rep(TRUE,11),
   time_varying = rep(FALSE,11),
   threshold_function = c(rep("NA",5),c("linear","logistic","linear"),rep("quadratic",3)),
   covariate1 = c("temp","o2","mi","temp","temp",rep("o2",2),rep("mi",2),"temp","o2"),
@@ -108,19 +108,19 @@ m_df = data.frame(
   interaction = c(rep(FALSE,4),TRUE,rep(FALSE,6)),
   tweedie_dens = rep(NA,11) # set up vector to store performance data if using cv
 )
-  
+
 # run models for each combination of settings/covariates in df ------------
 
-use_cv = FALSE # specify whether to do cross validation or not
+use_cv = TRUE # specify whether to do cross validation or not
 spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose # knots
 
 # fit fixed effects with splines as in mgcv to detect functional form
 m_gam_temp <- sdmTMB(formula = cpue_kg_km2 ~ 0 + as.factor(year) + s(temp, k = 5),
-  data = dat,
-  time = "year",
-  spde = spde,
-  family = tweedie(link = "log"),
-  anisotropy = TRUE)
+                     data = dat,
+                     time = "year",
+                     spde = spde,
+                     family = tweedie(link = "log"),
+                     anisotropy = TRUE)
 m_gam_o2 <- sdmTMB(
   formula = cpue_kg_km2 ~ 0 + as.factor(year) + s(o2, k = 5),
   data = dat,
@@ -189,44 +189,46 @@ for(i in 1:nrow(m_df)) {
   if(m_df$depth_effect[i]==TRUE) {
     formula = paste0(formula, " + depth + I(depth^2)")
   }
+  
+  # fit model with or without cross-validation
+  if(use_cv==TRUE) {
+    time="year"
+    if(m_df$spatial_only[i]==TRUE) time=NULL
+    m <- try(sdmTMB_cv(
+      formula = as.formula(formula),
+      data = sub,
+      x = "longitude", 
+      y = "latitude",
+      time = time,
+      k_folds = 4,
+      n_knots = 250,
+      seed = 10,
+      family = tweedie(link = "log"),
+      anisotropy = TRUE,
+      spatial_only = m_df$spatial_only[i]
+    ), silent = TRUE)
     
-    # fit model with or without cross-validation
-    if(use_cv==TRUE) {
-      m <- try(sdmTMB_cv(
-        formula = as.formula(formula),
-        data = sub,
-        x = "longitude", 
-        y = "latitude",
-        time = time,
-        k_folds = 4,
-        n_knots = 250,
-        seed = 10,
-        family = tweedie(link = "log"),
-        anisotropy = TRUE,
-        spatial_only = m_df$spatial_only[i]
-      ), silent = TRUE)
-      
-      if(class(m)!="try-error") {
-        saveRDS(m, file = paste0("output/wc/model_",i,"_MI_cv.rds"))
-        m_df$tweedie_dens[i] = m$sum_loglik
-      }
-      
-    } else {
-        m <- try(sdmTMB(
-          formula = as.formula(formula),
-          data = sub,
-          time = time,
-          spde = spde,
-          family = tweedie(link = "log"),
-          anisotropy = TRUE,
-          spatial_only = m_df$spatial_only[i]
-        ), silent = TRUE)
-        
-      if(class(m)!="try-error") {
-        saveRDS(m, file = paste0("output/wc/model_",i,"_MI.rds"))
-      }
-        
+    if(class(m)!="try-error") {
+      saveRDS(m, file = paste0("output/wc/model_",i,"_MI_cv.rds"))
+      m_df$tweedie_dens[i] = m$sum_loglik
     }
+    
+  } else {
+    m <- try(sdmTMB(
+      formula = as.formula(formula),
+      data = sub,
+      time = time,
+      spde = spde,
+      family = tweedie(link = "log"),
+      anisotropy = TRUE,
+      spatial_only = m_df$spatial_only[i]
+    ), silent = TRUE)
+    
+    if(class(m)!="try-error") {
+      saveRDS(m, file = paste0("output/wc/model_",i,"_MI.rds"))
+    }
+    
+  }
 }
 
 #saveRDS(m_df, "output/wc/models_MI.rds")

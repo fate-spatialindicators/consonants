@@ -227,10 +227,17 @@ for (i in 1:nrow(m_df)) {
   
 dAIC <- AICmat[,1] - min(AICmat[,1])
 dAIC <- matrix(as.numeric(sprintf(dAIC,fmt = '%.2f')), nrow = 13, ncol = 1)
+<<<<<<< HEAD
 rownames(dAIC) <- c("space + depth + year", 
                     "space + depth + year + temp",
                     "space + depth + year + o2",
                     "space + depth + year + po2",
+=======
+rownames(dAIC) <- c("space + depth + year + temp", 
+                    "space + depth + year + o2",
+                    "space + depth + year + p02",
+                    "space + depth + year + mi",
+>>>>>>> 0db89897d3bd3fd4ff79b89bcfe650660220f78e
                     "space + depth + year+temp + o2",
                     "space + depth + year + temp:o2",
                     "space + depth + year+temp + po2",
@@ -242,6 +249,12 @@ rownames(dAIC) <- c("space + depth + year",
                     "space + depth + year + mi(breakpoint)")
 dAIC
 
+<<<<<<< HEAD
             
+=======
+dAIC = data.frame(model = rownames(dAIC), dAIC = dAIC)
+
+
+>>>>>>> 0db89897d3bd3fd4ff79b89bcfe650660220f78e
 
 
