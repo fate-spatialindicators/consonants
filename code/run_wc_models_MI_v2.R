@@ -243,3 +243,7 @@ rownames(dAIC) <- c("space + depth + year + temp",
 dAIC
 
 dAIC = data.frame(model = rownames(dAIC), dAIC = dAIC)
+
+
+
+
