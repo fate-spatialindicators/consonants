@@ -131,30 +131,25 @@ for(i in 1:nrow(m_df)){
   sub <- dplyr::rename(dat, enviro1 = as.character(m_df$covariate1[i]))
   
   # format data and formula based on combination of arguments in model settings df
-  formula = paste0("cpue_kg_km2 ~ 0 + as.factor(year)")
-  time_formula = "~ -1"
-  time_varying = NULL
-  time = "year"
-  
+  if(m_df$threshold_function[i] == "linear") {
+    formula = paste0(formula, " + ", "breakpt(enviro1)")
+  }
+  if(m_df$threshold_function[i] == "logistic") {
+    formula = paste0(formula, " + ", "logistic(enviro1)")
+  } 
+  if(m_df$threshold_function[i] == "quadratic") {
+    formula = paste0(formula, " + ", "I(enviro1^2)")
+  }
+  if(m_df$threshold_function[i] == "NA") {
+    formula = paste0(formula, " + ", "enviro1")
+  }
+  # add 2nd covariate if included
   if(m_df$covariate2[i] != "none") {
     sub <- dplyr::rename(sub, enviro2 = as.character(m_df$covariate2[i]))
     if(m_df$interaction[i] == TRUE){
-      formula = paste0(formula, " + ", "enviro1", " + ", "enviro2", " + ", "enviro1", " * ", "enviro2")
+      formula = paste0(formula, " + ", "enviro2", " + ", "enviro1", " * ", "enviro2")
     } else {
-      formula = paste0(formula, " + ", "enviro1", " + ", "enviro2")
-    }
-  } else {
-    if(m_df$threshold_function[i] == "linear") {
-      formula = paste0(formula, " + ", "breakpt(enviro1)")
-    }
-    if(m_df$threshold_function[i] == "logistic") {
-      formula = paste0(formula, " + ", "logistic(enviro1)")
-    } 
-    if(m_df$threshold_function[i] == "quadratic") {
-      formula = paste0(formula, " + ", "I(enviro1^2)")
-    }
-    if(m_df$threshold_function[i] == "NA") {
-      formula = paste0(formula, " + ", "enviro1")
+      formula = paste0(formula, " + ", "enviro2")
     }
   }
   
