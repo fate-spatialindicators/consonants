@@ -126,7 +126,7 @@ spde <- make_spde(x = dat$longitude, y = dat$latitude, n_knots = 250) # choose #
 # fit models with typical approach
 for(i in 1:nrow(m_df)){
   print(paste0("model # ", i, " of ", nrow(m_df)))
-  
+  formula = paste0("cpue_kg_km2 ~ 0 + as.factor(year)")
   # rename variables to make code generic
   sub <- dplyr::rename(dat, enviro1 = as.character(m_df$covariate1[i]))
   
