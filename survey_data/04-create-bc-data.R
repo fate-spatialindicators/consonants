@@ -24,7 +24,7 @@ if (!file.exists(.file)) {
   dt <- dplyr::bind_rows(dt)
   dt <- dplyr::filter(dt, survey_series_id %in% c(1, 3, 4, 16)) %>%
     dplyr::select(year,
-      ssid = survey_series_id, 
+      ssid = survey_series_id,
       survey = survey_abbrev, species = species_common_name, longitude,
       latitude, depth_m, density_kgpm2, fishing_event_id
     )
@@ -45,7 +45,7 @@ denv <- readRDS("survey_data/bc-synoptic-env-raw.rds")
 # saveRDS(denv_old, "survey_data/bc-do-salinity-table.rds")
 denv_old <- readRDS("survey_data/bc-do-salinity-table.rds")
 names(denv_old) <- tolower(names(denv_old))
-denv_old <- denv_old %>%
+denv_old_do <- denv_old %>%
   group_by(fishing_event_id) %>%
   summarise(
     avg = mean(do, na.rm = TRUE),
@@ -54,51 +54,91 @@ denv_old <- denv_old %>%
     start_time = min(fe_event_time),
     end_time = max(fe_event_time),
     year = lubridate::year(fe_event_time),
-  .groups = "drop_last") %>%
+    .groups = "drop_last"
+  ) %>%
   mutate(attribute = "do_mlpL") %>%
-  distinct() 
-denv_old
+  distinct()
 
-denv2 <- select(denv, fishing_event_id, attribute, avg, min, max, start_time, end_time, year)
+denv_old_salinity <- denv_old %>%
+  group_by(fishing_event_id) %>%
+  summarise(
+    avg = mean(salinity, na.rm = TRUE),
+    min = min(salinity, na.rm = TRUE),
+    max = max(salinity, na.rm = TRUE),
+    start_time = min(fe_event_time),
+    end_time = max(fe_event_time),
+    year = lubridate::year(fe_event_time),
+    .groups = "drop_last"
+  ) %>%
+  mutate(attribute = "salinity_PSU") %>%
+  distinct()
 
-denv2 <- bind_rows(denv2, denv_old)
+denv2 <- select(
+  denv, fishing_event_id, attribute, avg,
+  min, max, start_time, end_time, year
+)
 
-denv2 %>% select(-start_time) %>% tidyr::pivot_wider(id_cols = c(year, fishing_event_id), names_from = attribute, values_from = avg) %>% head()
+denv2 <- bind_rows(denv2, denv_old_do) %>%
+  bind_rows(denv_old_salinity)
 
-do <- denv2 %>% filter(attribute == "do_mlpL") %>%
+do <- denv2 %>%
+  filter(attribute == "do_mlpL") %>%
   rename(do = avg) %>%
   select(year, fishing_event_id, do)
 
-temp <- denv2 %>% filter(attribute == "temperature_C") %>%
+temp <- denv2 %>%
+  filter(attribute == "temperature_C") %>%
   rename(temperature = avg) %>%
   select(year, fishing_event_id, temperature)
 
-d <- left_join(dt, do)
-d <- left_join(d, temp)
+sal <- denv2 %>%
+  filter(attribute == "salinity_PSU") %>%
+  rename(salinity = avg) %>%
+  select(year, fishing_event_id, salinity)
 
-sum(is.na(d$do))
-sum(is.na(d$temperature))
+d <- left_join(dt, do) %>%
+  left_join(temp) %>%
+  left_join(sal)
 
-group_by(d, year) %>% summarise(frac_na = sum(is.na(do)) / n())
-group_by(d, year) %>% summarise(frac_na = sum(is.na(temperature)) / n())
+group_by(d, year) %>%
+  summarise(frac_na = round(sum(is.na(do)) / n(), 2)) %>%
+  knitr::kable()
+group_by(d, year) %>%
+  summarise(frac_na = round(sum(is.na(temperature)) / n(), 2)) %>%
+  knitr::kable()
+group_by(d, year) %>%
+  summarise(frac_na = round(sum(is.na(salinity)) / n(), 2)) %>%
+  knitr::kable()
 
-ggplot(d, aes(longitude, latitude, colour = do)) + geom_point() +
+ggplot(d, aes(longitude, latitude, colour = salinity)) +
+  geom_point() +
   facet_wrap(~year)
 
-# ignore 2007, bad data:
+ggplot(d, aes(year, salinity, group = year)) +
+  geom_boxplot()
+
+ggplot(d, aes(longitude, latitude, colour = do)) +
+  geom_point() +
+  facet_wrap(~year)
+
+# ignore 2007, bad DO data, nobody can figure out why:
 d <- mutate(d, do = if_else(year != 2007, do, NA_real_))
 
-ggplot(d, aes(longitude, latitude, colour = temperature)) + geom_point() +
+ggplot(d, aes(longitude, latitude, colour = temperature)) +
+  geom_point() +
   facet_wrap(~year)
 
-env_data <- select(d, fishing_event_id, do, temperature, depth_m, longitude, latitude) %>% 
-  mutate(fishing_event_id = as.integer(fishing_event_id)) %>% 
+env_data <- select(
+  d, fishing_event_id, do, temperature, salinity,
+  depth_m, longitude, latitude
+) %>%
+  mutate(fishing_event_id = as.integer(fishing_event_id)) %>%
   distinct()
 saveRDS(env_data, "survey_data/bc-synoptic-env.rds")
 
-trawl_data <-  select(d, year, fishing_event_id, survey, species, density_kgpm2) %>%
-  mutate(fishing_event_id = as.integer(fishing_event_id)) %>% 
-  mutate(year = as.integer(year)) %>% 
+trawl_data <- select(d, year, fishing_event_id, survey, species, density_kgpm2) %>%
+  mutate(fishing_event_id = as.integer(fishing_event_id)) %>%
+  mutate(year = as.integer(year)) %>%
   distinct()
 saveRDS(trawl_data, "survey_data/bc-synoptic-trawls.rds")
 
