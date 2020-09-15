@@ -102,5 +102,7 @@ trawl_data <-  select(d, year, fishing_event_id, survey, species, density_kgpm2)
   distinct()
 saveRDS(trawl_data, "survey_data/bc-synoptic-trawls.rds")
 
-# join with
-# dat <- left_join(trawl_data, env_data, by = "fishing_event_id")
+# read and join with
+env_data <- readRDS("survey_data/bc-synoptic-env.rds")
+trawl_data <- readRDS("survey_data/bc-synoptic-trawls.rds")
+dat <- left_join(trawl_data, env_data, by = "fishing_event_id")
