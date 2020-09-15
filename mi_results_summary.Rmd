@@ -157,7 +157,7 @@ dat$po2_effect <- above
 
 dat$po2_effect[dat$po2<=bp_po2] = exp((dat$po2[dat$po2<=bp_po2])* slope_po2)
 ggplot(dat, aes(longitude, latitude, col = po2_effect)) + scale_colour_gradient2() +
-  geom_point(alpha=0.6) + facet_wrap(~year)
+  geom_point(alpha=0.6, scale = 0.5) + facet_wrap(~year)
 
 ```
 
