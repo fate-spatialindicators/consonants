@@ -9,8 +9,12 @@ env_data <- readRDS("survey_data/bc-synoptic-env.rds")
 trawl_data <- readRDS("survey_data/bc-synoptic-trawls.rds")
 dat <- left_join(trawl_data, env_data, by = "fishing_event_id")
 
+# renaming to match wc data
+dat <- rename(dat, o2 = do, temp = temperature, cpue_kg_km2 = density_kgpm2, sal = salinity, 
+              depth = depth_m, longitude_dd = longitude, latitude_dd = latitude)
+
 # analyze sablefish or cod for years and hauls with adequate oxygen and temperature data, within range of occurrence
-dat = filter(dat, species == "sablefish", year%in%seq(2010,2015), 
+dat = filter(dat, species == "sablefish", survey = "SYN WCVI",
              !is.na(temp), !is.na(o2), !is.na(sal),
              latitude_dd > min(latitude_dd[which(cpue_kg_km2>0)]),
              latitude_dd <= max(latitude_dd[which(cpue_kg_km2>0)]),
@@ -103,7 +107,7 @@ coordinates(dat_ll) <- c("longitude_dd", "latitude_dd")
 proj4string(dat_ll) <- CRS("+proj=longlat +datum=WGS84")
 # convert to utm with spTransform
 dat_utm = spTransform(dat_ll, 
-                      CRS("+proj=utm +zone=10 +datum=WGS84 +units=km"))
+                      CRS("+proj=utm +zone=9 +datum=WGS84 +units=km")) # check on zone
 # convert back from sp object to data frame
 dat = as.data.frame(dat_utm)
 dat = dplyr::rename(dat, longitude = longitude_dd, 
@@ -177,7 +181,7 @@ for(i in 1:nrow(m_df)){
     ), silent = TRUE)
     
     if(class(m)!="try-error") {
-      saveRDS(m, file = paste0("output/wc/model_",i,"_MI_cv.rds"))
+      saveRDS(m, file = paste0("output/bc/model_",i,"_MI_cv.rds"))
       m_df$tweedie_dens[i] = m$sum_loglik
     }
     
@@ -194,7 +198,7 @@ for(i in 1:nrow(m_df)){
     ), silent = TRUE)
     
     if(class(m)!="try-error") {
-      saveRDS(m, file = paste0("output/wc/model_",i,"_MI.rds"))
+      saveRDS(m, file = paste0("output/bc/model_",i,"_MI.rds"))
     }
     
   }
@@ -208,7 +212,7 @@ back.convert <- function(x, mean_orig, sd_orig) (x* sd_orig+mean_orig)
 
 
 
-#saveRDS(m_df, "output/wc/models_MI.rds")
+#saveRDS(m_df, "output/bc/models_MI.rds")
 
 #as.list(m$sd_report, "Estimate")$b_threshold
 #as.list(m$sd_report, "Std. Error")$b_threshold
@@ -218,7 +222,7 @@ back.convert <- function(x, mean_orig, sd_orig) (x* sd_orig+mean_orig)
 
 AICmat <- matrix(NA, nrow = 13, ncol =2)
 for (i in 1:nrow(m_df)) {
-  filename <- paste0("output/wc/model_",i,"_MI.rds")
+  filename <- paste0("output/bc/model_",i,"_MI.rds")
   m <- readRDS(filename)
   AICmat[i,1] <-AIC(m)
 }
