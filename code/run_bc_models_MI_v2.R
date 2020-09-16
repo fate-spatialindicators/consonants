@@ -14,12 +14,15 @@ dat <- rename(dat, o2 = do, temp = temperature, cpue_kg_km2 = density_kgpm2, sal
               depth = depth_m, longitude_dd = longitude, latitude_dd = latitude)
 
 # analyze sablefish or cod for years and hauls with adequate oxygen and temperature data, within range of occurrence
-dat = filter(dat, species == "sablefish", survey = "SYN WCVI",
+dat = filter(dat, species == "sablefish", survey == "SYN WCVI",
              !is.na(temp), !is.na(o2), !is.na(sal),
              latitude_dd > min(latitude_dd[which(cpue_kg_km2>0)]),
              latitude_dd <= max(latitude_dd[which(cpue_kg_km2>0)]),
              longitude_dd > min(longitude_dd[which(cpue_kg_km2>0)]),
              longitude_dd < max(longitude_dd[which(cpue_kg_km2>0)]))
+
+#check on sampling coverage by survey
+#print(dat %>% count(survey, year), n = 25)
 
 # compute metabolic index (mi) --------------------------------------------
 # converted from Halle Berger matlab script
