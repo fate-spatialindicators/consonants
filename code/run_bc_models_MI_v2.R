@@ -14,7 +14,7 @@ dat <- rename(dat, o2 = do, temp = temperature, cpue_kg_km2 = density_kgpm2, sal
               depth = depth_m, longitude_dd = longitude, latitude_dd = latitude)
 
 # analyze sablefish or cod for years and hauls with adequate oxygen and temperature data, within range of occurrence
-dat = filter(dat, species == "sablefish", survey == "SYN WCVI",
+dat = filter(dat, species == "pacific cod", survey == "SYN WCVI",
              !is.na(temp), !is.na(o2), !is.na(sal),
              latitude_dd > min(latitude_dd[which(cpue_kg_km2>0)]),
              latitude_dd <= max(latitude_dd[which(cpue_kg_km2>0)]),
@@ -77,7 +77,8 @@ dat$sol_Dep = dat$sol0*dat$press
 dat$po2 = dat$o2_umolkg/dat$sol_Dep
 
 # species-specific parameters
-Ao = 1.16625e-13
+#Ao = 1.16625e-13 # sablefish specific
+Ao <- 3.11E-14 # cod
 Eo = 0.8736 # from cod, 0.8736.  Make it one half or double
 B = 3000 # size in grams, roughly average (initial calculations used 10000g)
 n = -0.208 # borrowed from cod 
@@ -223,7 +224,7 @@ back.convert <- function(x, mean_orig, sd_orig) (x* sd_orig+mean_orig)
 # a few plots
 # residuals
 
-AICmat <- matrix(NA, nrow = 13, ncol =2)
+AICmat <- matrix(NA, nrow = nrow(m_df), ncol =2)
 for (i in 1:nrow(m_df)) {
   filename <- paste0("output/bc/model_",i,"_MI.rds")
   m <- readRDS(filename)
@@ -231,7 +232,7 @@ for (i in 1:nrow(m_df)) {
 }
 
 dAIC <- AICmat[,1] - min(AICmat[,1])
-dAIC <- matrix(as.numeric(sprintf(dAIC,fmt = '%.2f')), nrow = 13, ncol = 1)
+dAIC <- matrix(as.numeric(sprintf(dAIC,fmt = '%.2f')), nrow = nrow(m_df), ncol = 1)
 rownames(dAIC) <- c("space + depth + year + temp", 
                     "space + depth + year + o2",
                     "space + depth + year + p02",
@@ -247,8 +248,31 @@ rownames(dAIC) <- c("space + depth + year + temp",
                     "space + depth + year + mi(breakpoint)")
 dAIC
 
-dAIC = data.frame(model = rownames(dAIC), dAIC = dAIC)
 
 
 
+
+AICmat <- matrix(NA, nrow = 10, ncol =2)
+for (i in 1:10) {
+  filename <- paste0("output/bc/model_",i,"_MI.rds")
+  m <- readRDS(filename)
+  AICmat[i,1] <-AIC(m)
+}
+
+dAIC <- AICmat[,1] - min(AICmat[,1])
+dAIC <- matrix(as.numeric(sprintf(dAIC,fmt = '%.2f')), nrow = 10, ncol = 1)
+rownames(dAIC) <- c("space + depth + year + temp", 
+                    "space + depth + year + o2",
+                    "space + depth + year + p02",
+                    "space + depth + year + mi",
+                    "space + depth + year+temp + o2",
+                    "space + depth + year + temp:o2",
+                    "space + depth + year+temp + po2",
+                    "space + depth + year + temp:po2",
+                    "space + depth + year + o2(breakpoint)",
+                    "space + depth + year + o2(breakpoint) + temp")#,
+#"space + depth + year + po2(breakpoint)",
+#"space + depth + year + po2(breakpoint) + temp",
+#"space + depth + year + mi(breakpoint)")
+dAIC
 
