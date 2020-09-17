@@ -17,7 +17,7 @@ sp_survey <- arrange(expand.grid(sp = c("sablefish","pacific cod"), survey = uni
 for(j in 1:nrow(sp_survey)){
   # analyze years and hauls with adequate oxygen and temperature data, within range of occurrence
   dat = filter(dat_all, species == sp_survey$sp[j], survey == sp_survey$survey[j],
-               !is.na(temp), !is.na(o2), !is.na(sal),
+               !is.na(temp), !is.na(o2), !is.na(sal), !is.na(depth),
                latitude_dd > min(latitude_dd[which(cpue_kg_km2>0)]),
                latitude_dd <= max(latitude_dd[which(cpue_kg_km2>0)]),
                longitude_dd > min(longitude_dd[which(cpue_kg_km2>0)]),
@@ -117,14 +117,8 @@ for(j in 1:nrow(sp_survey)){
   coordinates(dat_ll) <- c("longitude_dd", "latitude_dd")
   proj4string(dat_ll) <- CRS("+proj=longlat +datum=WGS84")
   # convert to utm with spTransform
-  if(sp_survey$sp[j] == "sablefish"){
-    dat_utm = spTransform(dat_ll, 
-                          CRS("+proj=utm +zone=10 +datum=WGS84 +units=km")) # check on zone
-  }
-  else{
-    dat_utm = spTransform(dat_ll, 
-                          CRS("+proj=utm +zone=9 +datum=WGS84 +units=km")) # check on zone
-  }
+  dat_utm = spTransform(dat_ll, 
+                        CRS("+proj=utm +zone=9 +datum=WGS84 +units=km")) # check on zone
   # convert back from sp object to data frame
   dat = as.data.frame(dat_utm)
   dat = dplyr::rename(dat, longitude = longitude_dd, 
