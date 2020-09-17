@@ -1,9 +1,8 @@
-#devtools::install_github("pbs-assess/sdmTMB")
+devtools::install_github("pbs-assess/sdmTMB")
 library(sdmTMB)
 library(dplyr)
 library(sp)
 library(gsw)
-library(ggplot2)
 
 env_data <- readRDS("survey_data/bc-synoptic-env.rds")
 trawl_data <- readRDS("survey_data/bc-synoptic-trawls.rds")
@@ -209,21 +208,7 @@ for(i in 1:nrow(m_df)){
 }
 
 
-back.convert <- function(x, mean_orig, sd_orig) (x* sd_orig+mean_orig)
 # Get AIC table
-
-
-
-
-
-#saveRDS(m_df, "output/bc/models_MI.rds")
-
-#as.list(m$sd_report, "Estimate")$b_threshold
-#as.list(m$sd_report, "Std. Error")$b_threshold
-
-# a few plots
-# residuals
-
 AICmat <- matrix(NA, nrow = nrow(m_df), ncol =2)
 for (i in 1:nrow(m_df)) {
   filename <- paste0("output/bc/model_",i,"_MI.rds")
@@ -248,10 +233,7 @@ rownames(dAIC) <- c("space + depth + year + temp",
                     "space + depth + year + mi(breakpoint)")
 dAIC
 
-
-
-
-
+# Get AIC table if some models won't converge (specify which to compute for)
 AICmat <- matrix(NA, nrow = 10, ncol =2)
 for (i in 1:10) {
   filename <- paste0("output/bc/model_",i,"_MI.rds")
