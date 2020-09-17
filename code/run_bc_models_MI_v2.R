@@ -15,6 +15,7 @@ dat_all <- rename(dat_all, o2 = do, temp = temperature, cpue_kg_km2 = density_kg
 sp_survey <- arrange(expand.grid(sp = c("sablefish","pacific cod"), survey = unique(dat_all$survey)), sp)
 
 for(j in 1:nrow(sp_survey)){
+  print(paste0("model set # ", j, " of ", nrow(sp_survey)))
   # analyze years and hauls with adequate oxygen and temperature data, within range of occurrence
   dat = filter(dat_all, species == sp_survey$sp[j], survey == sp_survey$survey[j],
                !is.na(temp), !is.na(o2), !is.na(sal), !is.na(depth),
