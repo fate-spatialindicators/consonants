@@ -6,17 +6,17 @@ library(gsw)
 
 env_data <- readRDS("survey_data/bc-synoptic-env.rds")
 trawl_data <- readRDS("survey_data/bc-synoptic-trawls.rds")
-dat <- left_join(trawl_data, env_data, by = "fishing_event_id")
+dat_all <- left_join(trawl_data, env_data, by = "fishing_event_id")
 
 # renaming to match wc data
-dat <- rename(dat, o2 = do, temp = temperature, cpue_kg_km2 = density_kgpm2, sal = salinity, 
+dat_all <- rename(dat_all, o2 = do, temp = temperature, cpue_kg_km2 = density_kgpm2, sal = salinity, 
               depth = depth_m, longitude_dd = longitude, latitude_dd = latitude)
 
-sp_survey <- arrange(expand.grid(sp = c("sablefish","pacific cod"), survey = unique(dat$survey)), sp)
+sp_survey <- arrange(expand.grid(sp = c("sablefish","pacific cod"), survey = unique(dat_all$survey)), sp)
 
 for(j in 1:nrow(sp_survey)){
   # analyze years and hauls with adequate oxygen and temperature data, within range of occurrence
-  dat = filter(dat, species == sp_survey$sp[j], survey == sp_survey$survey[j],
+  dat = filter(dat_all, species == sp_survey$sp[j], survey == sp_survey$survey[j],
                !is.na(temp), !is.na(o2), !is.na(sal),
                latitude_dd > min(latitude_dd[which(cpue_kg_km2>0)]),
                latitude_dd <= max(latitude_dd[which(cpue_kg_km2>0)]),
@@ -256,6 +256,8 @@ for(j in 1:nrow(sp_survey)){
                       "space + depth + year + po2(breakpoint)",
                       "space + depth + year + po2(breakpoint) + temp",
                       "space + depth + year + mi(breakpoint)")
+  sink("output/bc/aic_tables.txt", append = TRUE)
   print(sp_survey[j,])
-  dAIC
+  print(dAIC)
+  sink()
 }
