@@ -13,7 +13,7 @@ dat <- rename(dat, o2 = do, temp = temperature, cpue_kg_km2 = density_kgpm2, sal
               depth = depth_m, longitude_dd = longitude, latitude_dd = latitude)
 
 # analyze sablefish or cod for years and hauls with adequate oxygen and temperature data, within range of occurrence
-dat = filter(dat, species == "pacific cod", survey == "SYN WCVI",
+dat = filter(dat, species == "pacific cod", survey == "SYN QCS",
              !is.na(temp), !is.na(o2), !is.na(sal),
              latitude_dd > min(latitude_dd[which(cpue_kg_km2>0)]),
              latitude_dd <= max(latitude_dd[which(cpue_kg_km2>0)]),
@@ -118,14 +118,14 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
 
 # create combination of covariates and threshold responses for different models
 m_df = data.frame(
-  spatial_only = rep(TRUE,13), 
-  depth_effect = rep(TRUE,13),
-  time_varying = rep(FALSE,13),
-  threshold_function = c(rep("NA",8),rep("linear", 5)),
-  covariate1 = c("temp","o2","po2","mi",rep("temp",4),rep("o2",2), rep("po2", 2),"mi"),
-  covariate2 = c(rep("none",4),"o2","o2","po2", "po2","none", "temp", "none", "temp","none"),
-  interaction = c(rep(FALSE,5),TRUE, FALSE, TRUE, rep(FALSE,5)),
-  tweedie_dens = rep(NA,13) # set up vector to store performance data if using cv
+  spatial_only = rep(TRUE,14), 
+  depth_effect = rep(TRUE,14),
+  time_varying = rep(FALSE,14),
+  threshold_function = c(rep("NA",9),rep("linear", 5)),
+  covariate1 = c("none","temp","o2","po2","mi",rep("temp",4),rep("o2",2), rep("po2", 2),"mi"),
+  covariate2 = c(rep("none",5),"o2","o2","po2", "po2","none", "temp", "none", "temp","none"),
+  interaction = c(rep(FALSE,6),TRUE, FALSE, TRUE, rep(FALSE,5)),
+  tweedie_dens = rep(NA,14) # set up vector to store performance data if using cv
 )
 
 # run models for each combination of settings/covariates in df ------------
@@ -153,6 +153,11 @@ for(i in 1:nrow(m_df)){
   if(m_df$threshold_function[i] == "NA") {
     formula = paste0(formula, " + ", "enviro1")
   }
+  
+  if(m_df$covariate1[i] == "none") {
+    formula = paste0("cpue_kg_km2 ~ 0 + as.factor(year)")
+  }
+  
   # add 2nd covariate if included
   if(m_df$covariate2[i] != "none") {
     sub <- dplyr::rename(sub, enviro2 = as.character(m_df$covariate2[i]))
@@ -209,7 +214,7 @@ for(i in 1:nrow(m_df)){
 
 
 # Get AIC table
-AICmat <- matrix(NA, nrow = nrow(m_df), ncol =2)
+AICmat <- matrix(NA, nrow = nrow(m_df), ncol = 2)
 for (i in 1:nrow(m_df)) {
   filename <- paste0("output/bc/model_",i,"_MI.rds")
   m <- readRDS(filename)
@@ -218,7 +223,8 @@ for (i in 1:nrow(m_df)) {
 
 dAIC <- AICmat[,1] - min(AICmat[,1])
 dAIC <- matrix(as.numeric(sprintf(dAIC,fmt = '%.2f')), nrow = nrow(m_df), ncol = 1)
-rownames(dAIC) <- c("space + depth + year + temp", 
+rownames(dAIC) <- c("space + depth + year",
+                    "space + depth + year + temp", 
                     "space + depth + year + o2",
                     "space + depth + year + p02",
                     "space + depth + year + mi",
@@ -232,29 +238,3 @@ rownames(dAIC) <- c("space + depth + year + temp",
                     "space + depth + year + po2(breakpoint) + temp",
                     "space + depth + year + mi(breakpoint)")
 dAIC
-
-# Get AIC table if some models won't converge (specify which to compute for)
-AICmat <- matrix(NA, nrow = 10, ncol =2)
-for (i in 1:10) {
-  filename <- paste0("output/bc/model_",i,"_MI.rds")
-  m <- readRDS(filename)
-  AICmat[i,1] <-AIC(m)
-}
-
-dAIC <- AICmat[,1] - min(AICmat[,1])
-dAIC <- matrix(as.numeric(sprintf(dAIC,fmt = '%.2f')), nrow = 10, ncol = 1)
-rownames(dAIC) <- c("space + depth + year + temp", 
-                    "space + depth + year + o2",
-                    "space + depth + year + p02",
-                    "space + depth + year + mi",
-                    "space + depth + year+temp + o2",
-                    "space + depth + year + temp:o2",
-                    "space + depth + year+temp + po2",
-                    "space + depth + year + temp:po2",
-                    "space + depth + year + o2(breakpoint)",
-                    "space + depth + year + o2(breakpoint) + temp")#,
-#"space + depth + year + po2(breakpoint)",
-#"space + depth + year + po2(breakpoint) + temp",
-#"space + depth + year + mi(breakpoint)")
-dAIC
-
