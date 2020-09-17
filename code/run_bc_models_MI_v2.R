@@ -230,11 +230,15 @@ for(j in 1:nrow(sp_survey)){
   # Get AIC table
   AICmat <- matrix(NA, nrow = nrow(m_df), ncol = 2)
   for (i in 1:nrow(m_df)) {
-    m <- readRDS(paste0(dir_name,"/model_",i,"_MI.rds"))
-    AICmat[i,1] <- AIC(m)
+    if(file.exists(paste0(dir_name,"/model_",i,"_MI.rds"))){
+      m <- readRDS(paste0(dir_name,"/model_",i,"_MI.rds"))
+      AICmat[i,1] <- AIC(m)
+    }else{
+      AICmat[i,1] <- NA
+    }
   }
   
-  dAIC <- AICmat[,1] - min(AICmat[,1])
+  dAIC <- AICmat[,1] - min(AICmat[,1], na.rm = TRUE)
   dAIC <- matrix(as.numeric(sprintf(dAIC,fmt = '%.2f')), nrow = nrow(m_df), ncol = 1)
   rownames(dAIC) <- c("space + depth + year",
                       "space + depth + year + temp", 
