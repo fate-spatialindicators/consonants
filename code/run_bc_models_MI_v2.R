@@ -206,7 +206,7 @@ for(j in 1:nrow(sp_survey)){
       ), silent = TRUE)
       
       if(class(m)!="try-error") {
-        saveRDS(m, file = paste0("output/bc/",sp_survey[j,1],"_",sub("SYN ","",sp_survey[j,2]),"/model_",i,"_MI_cv.rds"))
+        saveRDS(m, file = paste0("output/bc/",sub("pacific ","",sp_survey[j,1]),"_",sub("SYN ","",sp_survey[j,2]),"/model_",i,"_MI_cv.rds"))
         m_df$tweedie_dens[i] = m$sum_loglik
       }
       
@@ -223,7 +223,7 @@ for(j in 1:nrow(sp_survey)){
       ), silent = TRUE)
       
       if(class(m)!="try-error") {
-        saveRDS(m, file = paste0("output/bc/",sp_survey[j,1],"_",sub("SYN ","",sp_survey[j,2]),"/model_",i,"_MI.rds"))
+        saveRDS(m, file = paste0("output/bc/",sub("pacific ","",sp_survey[j,1]),"_",sub("SYN ","",sp_survey[j,2]),"/model_",i,"_MI.rds"))
       }
       
     }
