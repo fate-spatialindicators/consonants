@@ -206,7 +206,9 @@ for(j in 1:nrow(sp_survey)){
       ), silent = TRUE)
       
       if(class(m)!="try-error") {
-        saveRDS(m, file = paste0("output/bc/",sub("pacific ","",sp_survey[j,1]),"_",sub("SYN ","",sp_survey[j,2]),"/model_",i,"_MI_cv.rds"))
+        dir_name = paste0("output/bc/",sub("pacific ","",sp_survey[j,1]),"_",sub("SYN ","",sp_survey[j,2]))
+        if(!dir.exists(dir_name)){dir.create(dir_name)}
+        saveRDS(m, file = paste0(dir_name,"/model_",i,"_MI_cv.rds"))
         m_df$tweedie_dens[i] = m$sum_loglik
       }
       
@@ -223,7 +225,9 @@ for(j in 1:nrow(sp_survey)){
       ), silent = TRUE)
       
       if(class(m)!="try-error") {
-        saveRDS(m, file = paste0("output/bc/",sub("pacific ","",sp_survey[j,1]),"_",sub("SYN ","",sp_survey[j,2]),"/model_",i,"_MI.rds"))
+        dir_name = paste0("output/bc/",sub("pacific ","",sp_survey[j,1]),"_",sub("SYN ","",sp_survey[j,2]))
+        if(!dir.exists(dir_name)){dir.create(dir_name)}
+        saveRDS(m, file = paste0(dir_name,"/model_",i,"_MI.rds"))
       }
       
     }
@@ -232,9 +236,8 @@ for(j in 1:nrow(sp_survey)){
   # Get AIC table
   AICmat <- matrix(NA, nrow = nrow(m_df), ncol = 2)
   for (i in 1:nrow(m_df)) {
-    filename <- paste0("output/bc/model_",i,"_MI.rds")
-    m <- readRDS(filename)
-    AICmat[i,1] <-AIC(m)
+    m <- readRDS(paste0(dir_name,"/model_",i,"_MI.rds"))
+    AICmat[i,1] <- AIC(m)
   }
   
   dAIC <- AICmat[,1] - min(AICmat[,1])
