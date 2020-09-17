@@ -169,7 +169,8 @@ for(j in 1:nrow(sp_survey)){
       
     # add 2nd covariate if included
     if(m_df$covariate2[i] != "none") {
-      sub <- dplyr::rename(sub, enviro2 = as.character(m_df$covariate2[i]))
+      # rename variables to make code generic
+      sub <- dplyr::rename(dat, enviro2 = as.character(m_df$covariate2[i]))
       if(m_df$interaction[i] == TRUE){
         formula = paste0(formula, " + ", "enviro2", " + ", "enviro1", " * ", "enviro2")
       } else {
@@ -181,7 +182,6 @@ for(j in 1:nrow(sp_survey)){
       formula = paste0("cpue_kg_km2 ~ 0 + as.factor(year)")
       sub <- dat
     }else{
-      # rename variables to make code generic
       sub <- dplyr::rename(dat, enviro1 = as.character(m_df$covariate1[i]))
     }
     
@@ -247,9 +247,9 @@ for(j in 1:nrow(sp_survey)){
                       "space + depth + year + o2",
                       "space + depth + year + p02",
                       "space + depth + year + mi",
-                      "space + depth + year+temp + o2",
+                      "space + depth + year + temp + o2",
                       "space + depth + year + temp:o2",
-                      "space + depth + year+temp + po2",
+                      "space + depth + year + temp + po2",
                       "space + depth + year + temp:po2",
                       "space + depth + year + o2(breakpoint)",
                       "space + depth + year + o2(breakpoint) + temp",
