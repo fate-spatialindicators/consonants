@@ -5,11 +5,6 @@ library(sp)
 
 dat = readRDS("survey_data/joined_nwfsc_data.rds")
 
-dplyr::group_by(dat, species) %>% 
-  summarize(min = min(latitude_dd[which(cpue_kg_km2 > 0)]),
-    max = max(latitude_dd[which(cpue_kg_km2 > 0)])) %>% 
-  as.data.frame() %>% arrange(min)
-
 # UTM transformation
 dat_ll = dat
 coordinates(dat_ll) <- c("longitude_dd", "latitude_dd")
@@ -22,24 +17,28 @@ dat = as.data.frame(dat_utm)
 dat = dplyr::rename(dat, longitude = longitude_dd, 
   latitude = latitude_dd)
 
-# do some summaries by species
-d = dplyr::group_by(dat, species, year) %>% 
-  summarize(p = length(which(cpue_kg_km2>0))/n(),
-    max_lat = max(latitude[which(cpue_kg_km2>0)],na.rm=T), 
-    min_lat = min(latitude[which(cpue_kg_km2>0)],na.rm=T),
-    max_lon = max(longitude[which(cpue_kg_km2>0)],na.rm=T),
-    min_lon = min(longitude[which(cpue_kg_km2>0)],na.rm=T)) %>%
-  group_by(species) %>% 
-  summarize(p = mean(p), max_lat = max(max_lat), min_lat = min(min_lat),
-    max_lon = max(max_lon), min_lon = min(min_lon))
+# # use criteria based on sample sizes and depth
+# sp_to_drop = dplyr::group_by(dat, species, year) %>% 
+#   dplyr::summarize(p = length(which(cpue_kg_km2>0))/n(),
+#     n = length(which(cpue_kg_km2>0)),
+#     mean_depth = mean(depth[which(cpue_kg_km2>0)],na.rm=T)) %>%
+#   dplyr::group_by(species) %>% 
+#   summarize(n_year = length(which(p > 0)), p = mean(p),
+#     min_n = min(n), mean_n = mean(n),
+#     mean_depth = mean(mean_depth,na.rm=T)) %>% 
+#   dplyr::filter(mean_depth <= 400, n_year==16)
+# 
+# dat = dplyr::filter(dat, species %in% sp_to_drop$species==FALSE)
 
 df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
   depth_effect = c(TRUE,FALSE),
   time_varying = c(FALSE),
-  covariate = c("temp","o2")
+  covariate = c("temp")
 )
 saveRDS(df, "output/wc/models.RDS")
+
+# depth_filter=TRUE
 
 for(i in 1:nrow(df)) {
   
@@ -50,6 +49,12 @@ for(i in 1:nrow(df)) {
       latitude <= max(latitude[which(cpue_kg_km2>0)]),
       longitude > min(longitude[which(cpue_kg_km2>0)]),
       longitude < max(longitude[which(cpue_kg_km2>0)]))
+  
+  # if(depth_filter == TRUE) {
+  #   sub = dplyr::mutate(sub, min_depth = quantile(depth,0.25,na.rm=T),
+  #     max_depth = quantile(depth,0.75,na.rm=T)) %>% 
+  #     dplyr::filter(depth <= max_depth, depth >= min_depth)
+  # }
   
   # rescale variables
   sub$depth = scale(log(sub$depth))
@@ -111,7 +116,11 @@ for(i in 1:nrow(df)) {
     #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
     
     if(class(m)!="try-error") {
-      saveRDS(m, file=paste0("output/wc/model_",i,".rds"))
+      #if(depth_filter==FALSE) {
+        saveRDS(m, file=paste0("output/wc/model_",i,".rds"))
+      #} else {
+      #  saveRDS(m, file=paste0("output/wc/model_depthFilter_",i,".rds"))
+      #}
       #sd_report <- summary(m$sd_report)
       #params <- as.data.frame(sd_report[grep("quadratic", row.names(sd_report)), ])
     }

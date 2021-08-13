@@ -26,6 +26,19 @@ dat = dplyr::rename(dat, longitude = longitude_dd,
 dat$latitude = dat$latitude /1000
 dat$longitude = dat$longitude /1000
 
+# # use criteria based on sample sizes and depth
+# sp_to_drop = dplyr::group_by(dat, species, year) %>% 
+#   dplyr::summarize(p = length(which(cpue_kg_km2>0))/n(),
+#     n = length(which(cpue_kg_km2>0)),
+#     mean_depth = mean(depth[which(cpue_kg_km2>0)],na.rm=T)) %>%
+#   dplyr::group_by(species) %>% 
+#   summarize(n_year = length(which(p > 0)), p = mean(p),
+#     min_n = min(n), mean_n = mean(n),
+#     mean_depth = mean(mean_depth,na.rm=T)) %>% 
+#   dplyr::filter(mean_depth <= 400,n_year==13)
+# 
+# dat = dplyr::filter(dat, species %in% sp_to_drop$species==FALSE)
+
 df = expand.grid("species" = unique(dat$species),
   spatial_only=c(FALSE), 
   time_varying = c(FALSE),
@@ -35,16 +48,22 @@ df = expand.grid("species" = unique(dat$species),
 
 saveRDS(df, "output/goa/models.RDS")
 
+#depth_filter=FALSE
+
 for(i in 1:nrow(df)) {
   
   # filter by species, and select range within occurrences
-  sub = dplyr::filter(dat, 
-    species == df$species[i])
-  #%>% 
-  #  dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
-  #    latitude <= max(latitude[which(cpue_kg_km2>0)]),
-  #    longitude > min(longitude[which(cpue_kg_km2>0)]),
-  #    longitude < max(longitude[which(cpue_kg_km2>0)]))
+  sub = dplyr::filter(dat, species == df$species[i]) %>% 
+    dplyr::filter(latitude > min(latitude[which(cpue_kg_km2>0)]),
+    latitude <= max(latitude[which(cpue_kg_km2>0)]),
+    longitude > min(longitude[which(cpue_kg_km2>0)]),
+    longitude < max(longitude[which(cpue_kg_km2>0)]))
+  
+  # if(depth_filter == TRUE) {
+  #   sub = dplyr::mutate(sub, min_depth = quantile(depth,0.25,na.rm=T),
+  #     max_depth = quantile(depth,0.75,na.rm=T)) %>% 
+  #     dplyr::filter(depth <= max_depth, depth >= min_depth)
+  # }
   
   sub = dplyr::filter(sub,depth>0)
   # rescale variables
@@ -60,8 +79,8 @@ for(i in 1:nrow(df)) {
   sub = dplyr::rename(sub, enviro = as.character(df$covariate[i]))
   
   # make spde
-  spde <- make_spde(x = sub$longitude_dd, 
-    y = sub$latitude_dd, 
+  spde <- make_spde(x = sub$longitude, 
+    y = sub$latitude, 
     n_knots = 250)
   
   formula = paste0("cpue_kg_km2 ~ -1")
@@ -101,7 +120,12 @@ for(i in 1:nrow(df)) {
   #params <- as.data.frame(sd_report[grep("quadratic", 
   #  row.names(sd_report)), ])
   
-  if(class(m)!="try-error") saveRDS(m, 
-    file=paste0("output/goa/model_",i,".rds"))
+  if(class(m)!="try-error") {
+    #if(depth_filter==FALSE) {
+      saveRDS(m, file=paste0("output/goa/model_",i,".rds"))
+    #} else {
+    #  saveRDS(m, file=paste0("output/goa/model_depthFilter_",i,".rds"))
+    #}
+  }
   
 }
